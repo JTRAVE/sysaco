@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Boleta — {{ empleado.nombre_completo }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>Boleta de Pago</h2>
+        <p class="text-muted mb-0">{{ empleado.nombre_completo }} — {{ empleado.cargo }} / {{ empleado.departamento }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        {% if registro %}
+            <a href="{% url 'planilla:lista' %}" class="btn btn-secondary">Volver</a>
+            <a href="{% url 'planilla:eliminar' registro.pk %}" class="btn btn-outline-danger">Eliminar</a>
+        {% else %}
+            <a href="{% url 'rrhh:lista' %}" class="btn btn-secondary">Volver</a>
+        {% endif %}
+        <button onclick="window.print()" class="btn btn-outline-dark">Imprimir</button>
+    </div>
+</div>
+
+<!-- Ajuste del formulario inline -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header">Ajustar Cálculo</div>
+    <div class="card-body">
+        <form method="post" class="row g-2 align-items-end">
+            {% csrf_token %}
+            <div class="col-md-3">
+                <label class="form-label">Sueldo Básico (S/)</label>
+                <input type="number" name="sueldo_basico" value="{{ resultado.sueldo_basico }}"
+                       step="0.01" min="1025" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Sistema de Pensiones</label>
+                <select name="tipo_pension" class="form-select">
+                    <option value="ONP" {% if tipo_pension == 'ONP' %}selected{% endif %}>ONP (13%)</option>
+                    <option value="AFP" {% if tipo_pension == 'AFP' %}selected{% endif %}>AFP (~12.82%)</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <div class="form-check mt-4">
+                    <input type="checkbox" name="tiene_asignacion_familiar" class="form-check-input"
+                           id="asig" {% if tiene_familia %}checked{% endif %}>
+                    <label class="form-check-label" for="asig">Asignación Familiar</label>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">Recalcular</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Boleta -->
+<div class="card shadow border-0" id="boleta-imprimible">
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-6">
+                <h5>SYSACO</h5>
+                <small class="text-muted">Sistema de Recursos Humanos</small>
+            </div>
+            <div class="col-6 text-end">
+                <strong>BOLETA DE REMUNERACIONES</strong><br>
+                <small class="text-muted">{% if registro %}{{ registro.periodo|date:"F Y" }}{% else %}Cálculo referencial{% endif %}</small>
+            </div>
+        </div>
+        <hr>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <strong>Trabajador:</strong> {{ empleado.nombre_completo }}<br>
+                <strong>Cargo:</strong> {{ empleado.cargo }}<br>
+                <strong>Departamento:</strong> {{ empleado.departamento }}
+            </div>
+            <div class="col-md-6">
+                <strong>Cédula:</strong> {{ empleado.cedula }}<br>
+                <strong>Tipo Contrato:</strong> {{ empleado.get_tipo_contrato_display }}<br>
+                <strong>Sistema Pensiones:</strong> {{ tipo_pension }}
+            </div>
+        </div>
+        <hr>
+
+        <div class="row">
+            <!-- Ingresos -->
+            <div class="col-md-5">
+                <h6 class="text-primary border-bottom pb-1">INGRESOS</h6>
+                <table class="table table-sm">
+                    <tr><td>Sueldo Básico</td><td class="text-end">S/ {{ resultado.sueldo_basico }}</td></tr>
+                    {% if resultado.asignacion_familiar > 0 %}
+                    <tr><td>Asignación Familiar</td><td class="text-end">S/ {{ resultado.asignacion_familiar }}</td></tr>
+                    {% endif %}
+                    <tr class="fw-bold table-primary">
+                        <td>Total Ingresos</td><td class="text-end">S/ {{ resultado.remuneracion_bruta }}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Descuentos -->
+            <div class="col-md-4">
+                <h6 class="text-danger border-bottom pb-1">DESCUENTOS</h6>
+                <table class="table table-sm">
+                    {% if resultado.tipo_pension == 'AFP' %}
+                    <tr><td>AFP Fondo (10%)</td><td class="text-end">S/ {{ resultado.pension.fondo }}</td></tr>
+                    <tr><td>AFP Comisión</td><td class="text-end">S/ {{ resultado.pension.comision }}</td></tr>
+                    <tr><td>AFP Seguro</td><td class="text-end">S/ {{ resultado.pension.seguro }}</td></tr>
+                    {% else %}
+                    <tr><td>ONP (13%)</td><td class="text-end">S/ {{ resultado.pension.total }}</td></tr>
+                    {% endif %}
+                    <tr><td>IR 5ta Categ.</td><td class="text-end">S/ {{ resultado.ir_5ta.retencion_mensual }}</td></tr>
+                    <tr class="fw-bold table-danger">
+                        <td>Total Descuentos</td><td class="text-end">S/ {{ resultado.total_descuentos }}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Neto -->
+            <div class="col-md-3 d-flex align-items-center justify-content-center">
+                <div class="text-center p-3 bg-success text-white rounded w-100">
+                    <div class="small">NETO A PAGAR</div>
+                    <div class="fs-3 fw-bold">S/ {{ resultado.remuneracion_neta }}</div>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+        <!-- Beneficios sociales -->
+        <h6 class="text-info border-bottom pb-1">BENEFICIOS SOCIALES (referencial mensualizado)</h6>
+        <div class="row">
+            <div class="col-md-3 text-center">
+                <small class="text-muted d-block">Gratificación</small>
+                <strong>S/ {{ resultado.gratificacion.semestral }}</strong>
+                <small class="text-muted d-block">semestral</small>
+            </div>
+            <div class="col-md-3 text-center">
+                <small class="text-muted d-block">Bonif. Extraordinaria</small>
+                <strong>S/ {{ resultado.gratificacion.bonificacion_extraordinaria }}</strong>
+                <small class="text-muted d-block">por gratificación</small>
+            </div>
+            <div class="col-md-3 text-center">
+                <small class="text-muted d-block">CTS Semestral</small>
+                <strong>S/ {{ resultado.cts.semestral }}</strong>
+                <small class="text-muted d-block">depósito May/Nov</small>
+            </div>
+            <div class="col-md-3 text-center">
+                <small class="text-muted d-block">Vacaciones</small>
+                <strong>S/ {{ resultado.vacaciones }}</strong>
+                <small class="text-muted d-block">por año</small>
+            </div>
+        </div>
+        <hr>
+
+        <!-- Aporte empleador -->
+        <div class="row">
+            <div class="col-md-4">
+                <small class="text-muted">EsSalud (aporte empleador 9%):</small>
+                <strong class="ms-2">S/ {{ resultado.essalud }}</strong>
+            </div>
+            <div class="col-md-4">
+                <small class="text-muted">Costo total empleador (mensualizado):</small>
+                <strong class="ms-2">S/ {{ resultado.costo_total_empleador }}</strong>
+            </div>
+            <div class="col-md-4 text-end">
+                <small class="text-muted">UIT: S/ {{ resultado.uit }} | SMV: S/ {{ resultado.smv }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

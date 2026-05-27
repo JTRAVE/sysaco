@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Registro de Planilla — Sysaco{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0">Registrar Planilla</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Empleado</label>
+                        {{ form.empleado }}
+                        {% if form.empleado.errors %}<div class="text-danger small">{{ form.empleado.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Período</label>
+                        {{ form.periodo }}
+                        <div class="form-text">Selecciona el mes y año del período.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sueldo Básico (S/)</label>
+                        {{ form.sueldo_basico }}
+                        {% if form.sueldo_basico.errors %}<div class="text-danger small">{{ form.sueldo_basico.errors }}</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sistema de Pensiones</label>
+                        {{ form.tipo_pension }}
+                    </div>
+                    <div class="mb-4 form-check">
+                        {{ form.tiene_asignacion_familiar }}
+                        <label class="form-check-label">{{ form.tiene_asignacion_familiar.label }}</label>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'planilla:lista' %}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">Guardar y Ver Boleta</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

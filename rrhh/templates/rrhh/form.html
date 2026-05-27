@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }} — Sysaco{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0">{{ titulo }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Datos personales -->
+                    <h5 class="text-secondary mb-3 border-bottom pb-1">Datos Personales</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre</label>
+                            {{ form.nombre }}
+                            {% if form.nombre.errors %}
+                                <div class="text-danger small">{{ form.nombre.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Apellido</label>
+                            {{ form.apellido }}
+                            {% if form.apellido.errors %}
+                                <div class="text-danger small">{{ form.apellido.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Cédula</label>
+                            {{ form.cedula }}
+                            {% if form.cedula.errors %}
+                                <div class="text-danger small">{{ form.cedula.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Fecha de Nacimiento</label>
+                            {{ form.fecha_nacimiento }}
+                            {% if form.fecha_nacimiento.errors %}
+                                <div class="text-danger small">{{ form.fecha_nacimiento.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Género</label>
+                            {{ form.genero }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Dirección</label>
+                            {{ form.direccion }}
+                        </div>
+                    </div>
+
+                    <!-- Datos laborales -->
+                    <h5 class="text-secondary mb-3 border-bottom pb-1">Datos Laborales</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Cargo</label>
+                            {{ form.cargo }}
+                            {% if form.cargo.errors %}
+                                <div class="text-danger small">{{ form.cargo.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Departamento</label>
+                            {{ form.departamento }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Fecha de Ingreso</label>
+                            {{ form.fecha_ingreso }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Tipo de Contrato</label>
+                            {{ form.tipo_contrato }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Salario</label>
+                            {{ form.salario }}
+                            {% if form.salario.errors %}
+                                <div class="text-danger small">{{ form.salario.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Estado -->
+                    <h5 class="text-secondary mb-3 border-bottom pb-1">Estado</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">Estado</label>
+                            {{ form.estado }}
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Motivo de Salida <span class="text-muted">(opcional)</span></label>
+                            {{ form.motivo_salida }}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'rrhh:lista' %}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Planilla — Sysaco{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Planilla de Remuneraciones</h2>
+    <div class="d-flex gap-2">
+        <a href="{% url 'planilla:calculadora' %}" class="btn btn-outline-primary">Calculadora Rápida</a>
+        <a href="{% url 'planilla:crear' %}" class="btn btn-primary">+ Nuevo Registro</a>
+    </div>
+</div>
+
+{% if resumen %}
+
+<!-- Totales -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card text-center border-primary shadow-sm">
+            <div class="card-body py-3">
+                <div class="text-muted small">Total Remuneración Bruta</div>
+                <div class="fs-5 fw-bold text-primary">S/ {{ total_bruto }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-danger shadow-sm">
+            <div class="card-body py-3">
+                <div class="text-muted small">Total Descuentos</div>
+                <div class="fs-5 fw-bold text-danger">S/ {{ total_descuentos }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-success shadow-sm">
+            <div class="card-body py-3">
+                <div class="text-muted small">Total Neto a Pagar</div>
+                <div class="fs-5 fw-bold text-success">S/ {{ total_neto }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center border-warning shadow-sm">
+            <div class="card-body py-3">
+                <div class="text-muted small">Total EsSalud (empleador)</div>
+                <div class="fs-5 fw-bold text-warning">S/ {{ total_essalud }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla -->
+<div class="table-responsive">
+    <table class="table table-hover align-middle shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Empleado</th>
+                <th>Período</th>
+                <th>Sueldo Básico</th>
+                <th class="text-end">Rem. Bruta</th>
+                <th class="text-end">Descuentos</th>
+                <th class="text-end">Neto</th>
+                <th>Pensión</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in resumen %}
+            <tr>
+                <td>
+                    <div class="fw-semibold">{{ r.registro.empleado.nombre_completo }}</div>
+                    <small class="text-muted">{{ r.registro.empleado.cargo }}</small>
+                </td>
+                <td>{{ r.registro.periodo|date:"M Y" }}</td>
+                <td>S/ {{ r.registro.sueldo_basico }}</td>
+                <td class="text-end">S/ {{ r.bruto }}</td>
+                <td class="text-end text-danger">S/ {{ r.descuentos }}</td>
+                <td class="text-end text-success fw-semibold">S/ {{ r.neto }}</td>
+                <td>
+                    <span class="badge {% if r.registro.tipo_pension == 'AFP' %}bg-info{% else %}bg-secondary{% endif %}">
+                        {{ r.registro.tipo_pension }}
+                    </span>
+                    {% if r.registro.tiene_asignacion_familiar %}
+                        <span class="badge bg-light text-dark" title="Asignación Familiar">AF</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    <a href="{% url 'planilla:detalle' r.registro.pk %}" class="btn btn-sm btn-outline-primary">Boleta</a>
+                    <a href="{% url 'planilla:eliminar' r.registro.pk %}" class="btn btn-sm btn-outline-danger">✕</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot class="table-dark fw-bold">
+            <tr>
+                <td colspan="3">TOTALES ({{ resumen|length }} empleados)</td>
+                <td class="text-end">S/ {{ total_bruto }}</td>
+                <td class="text-end">S/ {{ total_descuentos }}</td>
+                <td class="text-end">S/ {{ total_neto }}</td>
+                <td colspan="2"></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+{% else %}
+<div class="alert alert-info">
+    No hay registros de planilla aún.
+    <a href="{% url 'planilla:crear' %}" class="alert-link">Crear el primero</a> o usa la
+    <a href="{% url 'planilla:calculadora' %}" class="alert-link">Calculadora Rápida</a>.
+</div>
+{% endif %}
+{% endblock %}

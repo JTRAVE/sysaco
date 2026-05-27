@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — Sysaco{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Bienvenido, {{ user.username }}</h2>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100 border-primary">
+            <div class="card-body text-center py-4">
+                <h1 class="display-4">👥</h1>
+                <h5 class="card-title">Gestión de Personal</h5>
+                <p class="card-text text-muted">Registra, edita y consulta el personal de la organización.</p>
+                <a href="{% url 'rrhh:lista' %}" class="btn btn-primary">Ir al módulo</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100 border-success">
+            <div class="card-body text-center py-4">
+                <h1 class="display-4">💰</h1>
+                <h5 class="card-title">Planilla de Sueldos</h5>
+                <p class="card-text text-muted">Cálculos de remuneraciones según normativa laboral peruana.</p>
+                <a href="{% url 'planilla:lista' %}" class="btn btn-success">Ir al módulo</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100 border-warning">
+            <div class="card-body text-center py-4">
+                <h1 class="display-4">🧮</h1>
+                <h5 class="card-title">Calculadora Rápida</h5>
+                <p class="card-text text-muted">Simula sueldos con ONP/AFP, IR 5ta categoría y beneficios sociales.</p>
+                <a href="{% url 'planilla:calculadora' %}" class="btn btn-warning">Calcular</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

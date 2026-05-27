@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Calculadora de Planilla — Sysaco{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Calculadora de Planilla</h2>
+
+<div class="row g-4">
+    <!-- Formulario -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">Datos del Cálculo</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ form.sueldo_basico.label }}</label>
+                        {{ form.sueldo_basico }}
+                        {% if form.sueldo_basico.errors %}
+                            <div class="text-danger small">{{ form.sueldo_basico.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">SMV vigente: S/ {{ form.sueldo_basico.field.min_value }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ form.tipo_pension.label }}</label>
+                        {{ form.tipo_pension }}
+                    </div>
+                    <div class="mb-4 form-check">
+                        {{ form.tiene_asignacion_familiar }}
+                        <label class="form-check-label">{{ form.tiene_asignacion_familiar.label }}</label>
+                        <div class="form-text">+S/ 102.50 (10% SMV)</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Calcular</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultado -->
+    {% if resultado %}
+    <div class="col-lg-8">
+
+        <!-- Resumen -->
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <div class="card text-center border-primary shadow-sm">
+                    <div class="card-body py-3">
+                        <div class="text-muted small">Remuneración Bruta</div>
+                        <div class="fs-4 fw-bold text-primary">S/ {{ resultado.remuneracion_bruta }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center border-danger shadow-sm">
+                    <div class="card-body py-3">
+                        <div class="text-muted small">Total Descuentos</div>
+                        <div class="fs-4 fw-bold text-danger">S/ {{ resultado.total_descuentos }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center border-success shadow-sm">
+                    <div class="card-body py-3">
+                        <div class="text-muted small">Remuneración Neta</div>
+                        <div class="fs-4 fw-bold text-success">S/ {{ resultado.remuneracion_neta }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <!-- Ingresos -->
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-primary text-white">Ingresos</div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm mb-0">
+                            <tr><td>Sueldo Básico</td><td class="text-end">S/ {{ resultado.sueldo_basico }}</td></tr>
+                            <tr><td>Asignación Familiar</td><td class="text-end">S/ {{ resultado.asignacion_familiar }}</td></tr>
+                            <tr class="table-primary fw-bold">
+                                <td>Remuneración Bruta</td><td class="text-end">S/ {{ resultado.remuneracion_bruta }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Descuentos -->
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-danger text-white">Descuentos del Trabajador</div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm mb-0">
+                            {% if resultado.tipo_pension == 'AFP' %}
+                            <tr><td>AFP — Fondo (10%)</td><td class="text-end">S/ {{ resultado.pension.fondo }}</td></tr>
+                            <tr><td>AFP — Comisión (1.47%)</td><td class="text-end">S/ {{ resultado.pension.comision }}</td></tr>
+                            <tr><td>AFP — Seguro (1.35%)</td><td class="text-end">S/ {{ resultado.pension.seguro }}</td></tr>
+                            {% else %}
+                            <tr><td>ONP (13%)</td><td class="text-end">S/ {{ resultado.pension.total }}</td></tr>
+                            {% endif %}
+                            <tr><td>IR 5ta Categoría</td><td class="text-end">S/ {{ resultado.ir_5ta.retencion_mensual }}</td></tr>
+                            <tr class="table-danger fw-bold">
+                                <td>Total Descuentos</td><td class="text-end">S/ {{ resultado.total_descuentos }}</td>
+                            </tr>
+                            <tr class="table-success fw-bold">
+                                <td>Neto a Pagar</td><td class="text-end">S/ {{ resultado.remuneracion_neta }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aportes del empleador -->
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-warning">Aportes del Empleador</div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm mb-0">
+                            <tr><td>EsSalud (9%)</td><td class="text-end">S/ {{ resultado.essalud }}</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Beneficios sociales -->
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-info text-white">Beneficios Sociales (mensualizado)</div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm mb-0">
+                            <tr>
+                                <td>Gratificación <small class="text-muted">(Jul/Dic)</small></td>
+                                <td class="text-end">S/ {{ resultado.gratificacion.mensualizado }}</td>
+                            </tr>
+                            <tr>
+                                <td>Bonif. Extraordinaria <small class="text-muted">(Ley 29351)</small></td>
+                                <td class="text-end">S/ {{ resultado.gratificacion.bonificacion_extraordinaria|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td>CTS <small class="text-muted">(May/Nov)</small></td>
+                                <td class="text-end">S/ {{ resultado.cts.mensual }}</td>
+                            </tr>
+                            <tr>
+                                <td>Vacaciones <small class="text-muted">(anual)</small></td>
+                                <td class="text-end">S/ {{ resultado.vacaciones }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Costo total empleador -->
+            <div class="col-12">
+                <div class="card shadow-sm border-dark">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Costo Total Mensual para el Empleador</h6>
+                            <small class="text-muted">Remuneración bruta + EsSalud + Gratificación mensualizada + CTS mensual</small>
+                        </div>
+                        <div class="fs-4 fw-bold">S/ {{ resultado.costo_total_empleador }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IR 5ta detalle -->
+            {% if resultado.ir_5ta.tramos %}
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header">Detalle IR 5ta Categoría</div>
+                    <div class="card-body">
+                        <div class="row mb-2">
+                            <div class="col-md-4"><strong>Renta Bruta Anual:</strong> S/ {{ resultado.ir_5ta.renta_bruta_anual }}</div>
+                            <div class="col-md-4"><strong>Deducción 7 UIT:</strong> S/ {{ resultado.ir_5ta.deduccion_7uit }}</div>
+                            <div class="col-md-4"><strong>Renta Neta Anual:</strong> S/ {{ resultado.ir_5ta.renta_neta_anual }}</div>
+                        </div>
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr><th>Tramo</th><th>Tasa</th><th>Impuesto</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for t in resultado.ir_5ta.tramos %}
+                                <tr>
+                                    <td>S/ {{ t.desde }} — S/ {{ t.hasta }}</td>
+                                    <td>{{ t.tasa }}%</td>
+                                    <td>S/ {{ t.impuesto }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-dark">
+                                <tr>
+                                    <td colspan="2"><strong>IR Anual</strong></td>
+                                    <td><strong>S/ {{ resultado.ir_5ta.ir_anual }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2"><strong>Retención Mensual</strong></td>
+                                    <td><strong>S/ {{ resultado.ir_5ta.retencion_mensual }}</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <small class="text-muted">UIT {{ resultado.uit }} — Art. 53 LIR</small>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

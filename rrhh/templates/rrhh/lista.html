@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Empleados — Sysaco{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Gestión de Personal</h2>
+    <a href="{% url 'rrhh:crear' %}" class="btn btn-primary">+ Nuevo Empleado</a>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <form method="get" class="row g-2">
+            <div class="col-md-6">
+                <input type="text" name="q" value="{{ query }}" class="form-control"
+                       placeholder="Buscar por nombre, cédula, cargo o departamento...">
+            </div>
+            <div class="col-md-3">
+                <select name="estado" class="form-select">
+                    <option value="">Todos los estados</option>
+                    <option value="activo" {% if estado == 'activo' %}selected{% endif %}>Activo</option>
+                    <option value="inactivo" {% if estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-secondary w-100">Filtrar</button>
+                <a href="{% url 'rrhh:lista' %}" class="btn btn-outline-secondary w-100">Limpiar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resultados -->
+<p class="text-muted">{{ total }} empleado{{ total|pluralize }} encontrado{{ total|pluralize }}</p>
+
+{% if empleados %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Nombre</th>
+                <th>Cédula</th>
+                <th>Cargo</th>
+                <th>Departamento</th>
+                <th>Contrato</th>
+                <th>Estado</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for emp in empleados %}
+            <tr>
+                <td>
+                    <a href="{% url 'rrhh:detalle' emp.pk %}" class="text-decoration-none fw-semibold">
+                        {{ emp.nombre_completo }}
+                    </a>
+                </td>
+                <td>{{ emp.cedula }}</td>
+                <td>{{ emp.cargo }}</td>
+                <td>{{ emp.departamento }}</td>
+                <td>{{ emp.get_tipo_contrato_display }}</td>
+                <td>
+                    {% if emp.estado == 'activo' %}
+                        <span class="badge bg-success">Activo</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Inactivo</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    <a href="{% url 'rrhh:editar' emp.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
+                    <a href="{% url 'rrhh:eliminar' emp.pk %}" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">No se encontraron empleados con los criterios seleccionados.</div>
+{% endif %}
+{% endblock %}

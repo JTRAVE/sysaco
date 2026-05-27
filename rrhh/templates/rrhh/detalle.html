@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}{{ empleado.nombre_completo }} — Sysaco{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>{{ empleado.nombre_completo }}</h2>
+            {% if empleado.estado == 'activo' %}
+                <span class="badge bg-success fs-6">Activo</span>
+            {% else %}
+                <span class="badge bg-secondary fs-6">Inactivo</span>
+            {% endif %}
+        </div>
+
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-dark text-white">Datos Personales</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6"><strong>Cédula:</strong> {{ empleado.cedula }}</div>
+                    <div class="col-md-6"><strong>Género:</strong> {{ empleado.get_genero_display }}</div>
+                    <div class="col-md-6 mt-2"><strong>Fecha Nacimiento:</strong> {{ empleado.fecha_nacimiento }}</div>
+                    <div class="col-12 mt-2"><strong>Dirección:</strong> {{ empleado.direccion|default:"—" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-dark text-white">Datos Laborales</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6"><strong>Cargo:</strong> {{ empleado.cargo }}</div>
+                    <div class="col-md-6"><strong>Departamento:</strong> {{ empleado.departamento }}</div>
+                    <div class="col-md-6 mt-2"><strong>Fecha Ingreso:</strong> {{ empleado.fecha_ingreso }}</div>
+                    <div class="col-md-6 mt-2"><strong>Tipo Contrato:</strong> {{ empleado.get_tipo_contrato_display }}</div>
+                    <div class="col-md-6 mt-2"><strong>Salario:</strong> ${{ empleado.salario }}</div>
+                </div>
+            </div>
+        </div>
+
+        {% if empleado.motivo_salida %}
+        <div class="card shadow-sm mb-3 border-warning">
+            <div class="card-header bg-warning">Motivo de Salida</div>
+            <div class="card-body">{{ empleado.motivo_salida }}</div>
+        </div>
+        {% endif %}
+
+        <div class="d-flex gap-2">
+            <a href="{% url 'rrhh:lista' %}" class="btn btn-secondary">Volver</a>
+            <a href="{% url 'rrhh:editar' empleado.pk %}" class="btn btn-primary">Editar</a>
+            <a href="{% url 'planilla:boleta_empleado' empleado.pk %}" class="btn btn-success">Ver Boleta</a>
+            <a href="{% url 'rrhh:eliminar' empleado.pk %}" class="btn btn-danger ms-auto">Eliminar</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

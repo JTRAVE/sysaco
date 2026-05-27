@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Eliminar Empleado — Sysaco{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">Confirmar Eliminación</h4>
+            </div>
+            <div class="card-body text-center py-4">
+                <p class="fs-5">¿Estás seguro que deseas eliminar al empleado?</p>
+                <p class="fw-bold fs-4">{{ empleado.nombre_completo }}</p>
+                <p class="text-muted">Cédula: {{ empleado.cedula }} — {{ empleado.cargo }}</p>
+                <p class="text-danger small">Esta acción no se puede deshacer.</p>
+
+                <form method="post" class="d-flex justify-content-center gap-3 mt-3">
+                    {% csrf_token %}
+                    <a href="{% url 'rrhh:lista' %}" class="btn btn-secondary px-4">Cancelar</a>
+                    <button type="submit" class="btn btn-danger px-4">Sí, eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
