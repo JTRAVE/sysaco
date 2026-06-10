@@ -218,6 +218,22 @@
             opacity: 1;
         }
 
+        /* Sub nav items */
+        .nav-sub {
+            padding-left: 24px;
+            font-size: 13px;
+            margin-left: 16px;
+            margin-right: 8px;
+            border-left: 2px solid #1e293b;
+            border-radius: 0 8px 8px 0;
+        }
+        .nav-sub i { font-size: 15px; }
+        #sidebar.collapsed .nav-sub {
+            padding-left: 16px;
+            margin-left: 8px;
+            border-left: none;
+        }
+
         /* Divider */
         .sidebar-divider {
             height: 1px;
@@ -346,10 +362,16 @@
 
         <div class="sidebar-section">Módulos</div>
 
-        <a href="{% url 'rrhh:lista' %}" class="nav-item {% if 'rrhh' in request.resolver_match.namespace %}active{% endif %}"
-           data-tooltip="Personal">
+        <a href="{% url 'rrhh:lista' %}" class="nav-item {% if request.resolver_match.namespace == 'rrhh' and request.resolver_match.url_name == 'lista' %}active{% endif %}"
+           data-tooltip="Capital Humano">
             <i class="bi bi-people-fill"></i>
-            <span class="nav-label">Personal</span>
+            <span class="nav-label">Capital Humano</span>
+        </a>
+
+        <a href="{% url 'rrhh:empleados' %}" class="nav-item nav-sub {% if request.resolver_match.namespace == 'rrhh' and request.resolver_match.url_name == 'empleados' %}active{% endif %}"
+           data-tooltip="Empleados">
+            <i class="bi bi-person-lines-fill"></i>
+            <span class="nav-label">Empleados</span>
         </a>
 
         <a href="{% url 'planilla:lista' %}" class="nav-item {% if request.resolver_match.namespace == 'planilla' and request.resolver_match.url_name == 'lista' %}active{% endif %}"
