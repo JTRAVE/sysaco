@@ -1,0 +1,21 @@
+[flake8]
+max-line-length = 100
+exclude =
+    .git,
+    __pycache__,
+    migrations,
+    venv,
+    .venv,
+    staticfiles,
+    generar_informe.py
+per-file-ignores =
+    sysaco/settings*.py: E501
+    rrhh/management/commands/*.py: E501,E221,E225,E228,E231
+    login/admin.py: F401
+    login/models.py: F401
+    login/tests.py: F401
+    login/views.py: E501,W292
+    planilla/admin.py: E501,F401
+    planilla/calculadora.py: E501
+    planilla/forms.py: E501
+    planilla/views.py: E501

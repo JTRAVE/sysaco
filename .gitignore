@@ -1,30 +1,44 @@
-# Entorno virtual
-.venv/
-venv/
-env/
-
 # Python
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
 .Python
+*.egg-info/
+dist/
+build/
+.eggs/
 
 # Django
 *.log
 local_settings.py
 db.sqlite3
+db.sqlite3-journal
 media/
+staticfiles/
 
-# Variables de entorno (contienen contraseñas)
+# Entorno virtual
+venv/
+.venv/
+env/
+ENV/
+
+# Variables de entorno
 .env
 .env.*
+!.env.example
 
-# IDEs
+# IDE
 .vscode/
 .idea/
 *.swp
+*.swo
 
 # Sistema operativo
 .DS_Store
 Thumbs.db
+
+# Pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/

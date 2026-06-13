@@ -140,7 +140,7 @@ class Command(BaseCommand):
             )
             creados += 1
 
-        self.stdout.write(f'  ✔ 24 operarios creados — S/ 1,250')
+        self.stdout.write('  ✔ 24 operarios creados — S/ 1,250')
 
         total = Empleado.objects.count()
         self.stdout.write(self.style.SUCCESS(

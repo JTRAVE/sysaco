@@ -1,0 +1,569 @@
+{% extends "base.html" %}
+
+{% block title %}Capital Humano — Sysaco{% endblock %}
+{% block page_title %}Capital Humano{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+    .kpi-card {
+        border: none;
+        border-radius: 16px;
+        padding: 22px 24px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        background: #fff;
+        box-shadow: 0 1px 4px rgba(0,0,0,.06);
+        transition: transform .2s, box-shadow .2s;
+    }
+    .kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0,0,0,.1);
+    }
+    .kpi-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+    .kpi-value {
+        font-size: 28px;
+        font-weight: 800;
+        line-height: 1;
+        color: #0f172a;
+    }
+    .kpi-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .9px;
+        color: #64748b;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+    .kpi-sub {
+        font-size: 11px;
+        color: #94a3b8;
+        margin-top: 2px;
+    }
+    .chart-card {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 1px 4px rgba(0,0,0,.06);
+        background: #fff;
+    }
+    .chart-card .card-header {
+        background: transparent;
+        border-bottom: 1px solid #f1f5f9;
+        padding: 18px 22px 14px;
+        font-weight: 700;
+        font-size: 14px;
+        color: #1e293b;
+    }
+    .chart-card .card-body {
+        padding: 16px 22px 20px;
+    }
+    .emp-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .emp-row:last-child { border-bottom: none; }
+    .emp-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: #eff6ff;
+        color: #2563eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+    .emp-name { font-weight: 600; font-size: 14px; color: #1e293b; }
+    .emp-meta { font-size: 12px; color: #64748b; }
+    .badge-estado {
+        font-size: 11px;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+    .section-title {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700;
+        color: #94a3b8;
+        margin-bottom: 14px;
+    }
+
+    /* ── KPI de Gestión ── */
+    .kpi-mgmt {
+        border: none;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 1px 4px rgba(0,0,0,.06);
+        padding: 20px 22px;
+        height: 100%;
+        transition: transform .2s, box-shadow .2s;
+    }
+    .kpi-mgmt:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0,0,0,.1);
+    }
+    .kpi-mgmt-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+    .kpi-mgmt-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+    .kpi-mgmt-name {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700;
+        color: #64748b;
+        line-height: 1.4;
+    }
+    .kpi-mgmt-value {
+        font-size: 34px;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+    .kpi-mgmt-formula {
+        font-size: 11px;
+        color: #94a3b8;
+        margin-bottom: 14px;
+    }
+    .kpi-progress-track {
+        height: 7px;
+        background: #f1f5f9;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 10px;
+    }
+    .kpi-progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width .7s ease;
+    }
+    .kpi-mgmt-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 11px;
+        color: #64748b;
+    }
+    .badge-kpi-ok    { background:#dcfce7; color:#16a34a; padding:3px 10px; border-radius:20px; font-weight:700; font-size:11px; white-space:nowrap; }
+    .badge-kpi-alert { background:#fee2e2; color:#dc2626; padding:3px 10px; border-radius:20px; font-weight:700; font-size:11px; white-space:nowrap; }
+    .badge-kpi-info  { background:#f1f5f9; color:#64748b; padding:3px 10px; border-radius:20px; font-weight:700; font-size:11px; white-space:nowrap; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Header row -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <p class="text-muted mb-0" style="font-size:13px;">
+            Panel de gestión y análisis del personal activo
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'rrhh:empleados' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+            <i class="bi bi-table me-1"></i> Ver todos
+        </a>
+        <a href="{% url 'rrhh:crear' %}" class="btn btn-primary btn-sm rounded-pill px-3">
+            <i class="bi bi-person-plus-fill me-1"></i> Nuevo empleado
+        </a>
+    </div>
+</div>
+
+<!-- KPI row -->
+<p class="section-title">Indicadores clave</p>
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background:#eff6ff; color:#2563eb;">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div>
+                <div class="kpi-value">{{ total }}</div>
+                <div class="kpi-label">Total empleados</div>
+                <div class="kpi-sub">Registros en sistema</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background:#f0fdf4; color:#16a34a;">
+                <i class="bi bi-person-check-fill"></i>
+            </div>
+            <div>
+                <div class="kpi-value" style="color:#16a34a;">{{ activos }}</div>
+                <div class="kpi-label">Activos</div>
+                <div class="kpi-sub">
+                    {% if total %}{{ activos|floatformat:0 }} de {{ total }}{% else %}—{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background:#fef2f2; color:#dc2626;">
+                <i class="bi bi-person-dash-fill"></i>
+            </div>
+            <div>
+                <div class="kpi-value" style="color:#dc2626;">{{ inactivos }}</div>
+                <div class="kpi-label">Inactivos</div>
+                <div class="kpi-sub">Con cese registrado</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="kpi-card">
+            <div class="kpi-icon" style="background:#fefce8; color:#ca8a04;">
+                <i class="bi bi-person-plus-fill"></i>
+            </div>
+            <div>
+                <div class="kpi-value" style="color:#ca8a04;">{{ nuevos_mes }}</div>
+                <div class="kpi-label">Nuevos este mes</div>
+                <div class="kpi-sub">Ingresos del período</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KPIs de Gestión -->
+<p class="section-title">KPIs de gestión de capital humano</p>
+<div class="row g-3 mb-4">
+
+    <!-- KPI 1: Tasa de Retención -->
+    <div class="col-12 col-lg-4">
+        <div class="kpi-mgmt">
+            <div class="kpi-mgmt-header">
+                <div class="kpi-mgmt-icon" style="background:#eff6ff; color:#2563eb;">
+                    <i class="bi bi-shield-check-fill"></i>
+                </div>
+                <div class="kpi-mgmt-name">Tasa de Retención<br>de Personal</div>
+            </div>
+            <div class="kpi-mgmt-value" style="color:{% if tasa_retencion >= 85 %}#16a34a{% else %}#dc2626{% endif %};">
+                {{ tasa_retencion }}%
+            </div>
+            <div class="kpi-mgmt-formula">
+                ({{ activos }} activos ÷ {{ total }} total) × 100
+            </div>
+            <div class="kpi-progress-track">
+                <div class="kpi-progress-fill"
+                     style="width:{{ tasa_retencion }}%;
+                            background:{% if tasa_retencion >= 85 %}#16a34a{% else %}#dc2626{% endif %};"></div>
+            </div>
+            <div class="kpi-mgmt-footer">
+                <span>Meta: ≥ 85%</span>
+                {% if tasa_retencion >= 85 %}
+                    <span class="badge-kpi-ok">✓ CUMPLE META</span>
+                {% else %}
+                    <span class="badge-kpi-alert">✗ BAJO META</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI 2: Costo Total Planilla Mensual -->
+    <div class="col-12 col-lg-4">
+        <div class="kpi-mgmt">
+            <div class="kpi-mgmt-header">
+                <div class="kpi-mgmt-icon" style="background:#fdf4ff; color:#9333ea;">
+                    <i class="bi bi-cash-coin"></i>
+                </div>
+                <div class="kpi-mgmt-name">Costo Total Planilla<br>Mensual</div>
+            </div>
+            <div class="kpi-mgmt-value" style="color:#9333ea; font-size:26px;">
+                S/ {{ costo_mes_display }}
+            </div>
+            <div class="kpi-mgmt-formula">
+                Σ (Sueldo básico + AF) — activos del período
+            </div>
+            <div class="kpi-progress-track">
+                <div class="kpi-progress-fill"
+                     style="width:{{ planilla_bar }}%;
+                            background:{% if meta_planilla_ok %}#16a34a{% elif meta_planilla_ok == False %}#dc2626{% else %}#94a3b8{% endif %};"></div>
+            </div>
+            <div class="kpi-mgmt-footer">
+                {% if hay_mes_anterior %}
+                    <span>Var. vs mes ant.:&nbsp;
+                        {% if variacion_planilla > 0 %}▲ +{% elif variacion_planilla < 0 %}▼ {% else %}→ {% endif %}{{ variacion_planilla }}%
+                    </span>
+                    {% if meta_planilla_ok %}
+                        <span class="badge-kpi-ok">✓ ESTABLE</span>
+                    {% else %}
+                        <span class="badge-kpi-alert">✗ DESVIACIÓN</span>
+                    {% endif %}
+                {% else %}
+                    <span>Meta: variación ≤ ±3%</span>
+                    <span class="badge-kpi-info">SIN REFERENCIA</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI 3: Turnover -->
+    <div class="col-12 col-lg-4">
+        <div class="kpi-mgmt">
+            <div class="kpi-mgmt-header">
+                <div class="kpi-mgmt-icon" style="background:#fef2f2; color:#dc2626;">
+                    <i class="bi bi-arrow-repeat"></i>
+                </div>
+                <div class="kpi-mgmt-name">Índice de Rotación<br>de Personal (Turnover)</div>
+            </div>
+            <div class="kpi-mgmt-value" style="color:{% if turnover <= 10 %}#16a34a{% else %}#dc2626{% endif %};">
+                {{ turnover }}%
+            </div>
+            <div class="kpi-mgmt-formula">
+                ({{ inactivos }} inactivos ÷ {{ total }} total) × 100
+            </div>
+            <div class="kpi-progress-track">
+                <div class="kpi-progress-fill"
+                     style="width:{{ turnover }}%;
+                            background:{% if turnover <= 10 %}#16a34a{% else %}#dc2626{% endif %};"></div>
+            </div>
+            <div class="kpi-mgmt-footer">
+                <span>Meta: ≤ 10%</span>
+                {% if turnover <= 10 %}
+                    <span class="badge-kpi-ok">✓ CUMPLE META</span>
+                {% else %}
+                    <span class="badge-kpi-alert">✗ SUPERA META</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts row -->
+<p class="section-title">Distribución del personal activo</p>
+<div class="row g-3 mb-4">
+
+    <!-- Bar: Por departamento -->
+    <div class="col-lg-6">
+        <div class="chart-card card h-100">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="bi bi-bar-chart-fill text-primary"></i>
+                Empleados por departamento
+            </div>
+            <div class="card-body">
+                <canvas id="chartDepto" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donut: Por contrato -->
+    <div class="col-lg-3">
+        <div class="chart-card card h-100">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="bi bi-pie-chart-fill text-warning"></i>
+                Tipo de contrato
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="chartContrato" width="180" height="180"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Donut: Por género -->
+    <div class="col-lg-3">
+        <div class="chart-card card h-100">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="bi bi-gender-ambiguous text-success"></i>
+                Por género
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="chartGenero" width="180" height="180"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom row: últimas incorporaciones + salario -->
+<div class="row g-3">
+
+    <!-- Últimas incorporaciones -->
+    <div class="col-lg-8">
+        <div class="chart-card card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clock-history me-2 text-primary"></i>Últimas incorporaciones</span>
+                <a href="{% url 'rrhh:empleados' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3" style="font-size:12px;">
+                    Ver todos <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+            <div class="card-body py-2">
+                {% if ultimos %}
+                    {% for emp in ultimos %}
+                    <div class="emp-row">
+                        <div class="emp-avatar">{{ emp.nombre|first }}{{ emp.apellido|first }}</div>
+                        <div class="flex-grow-1">
+                            <div class="emp-name">
+                                <a href="{% url 'rrhh:detalle' emp.pk %}" class="text-decoration-none text-dark">
+                                    {{ emp.nombre_completo }}
+                                </a>
+                            </div>
+                            <div class="emp-meta">{{ emp.cargo }} · {{ emp.departamento }}</div>
+                        </div>
+                        <div class="text-end">
+                            {% if emp.estado == 'activo' %}
+                                <span class="badge-estado" style="background:#dcfce7; color:#16a34a;">Activo</span>
+                            {% else %}
+                                <span class="badge-estado" style="background:#f1f5f9; color:#64748b;">Inactivo</span>
+                            {% endif %}
+                            <div style="font-size:11px; color:#94a3b8; margin-top:2px;">{{ emp.fecha_ingreso|date:"d/m/Y" }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-4 mb-0">Sin empleados registrados aún.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Salario promedio + acciones rápidas -->
+    <div class="col-lg-4 d-flex flex-column gap-3">
+
+        <!-- Salario promedio -->
+        <div class="kpi-card flex-column align-items-start gap-2" style="flex:0;">
+            <div class="d-flex align-items-center gap-3 w-100">
+                <div class="kpi-icon" style="background:#fdf4ff; color:#9333ea;">
+                    <i class="bi bi-currency-dollar"></i>
+                </div>
+                <div>
+                    <div class="kpi-value" style="color:#9333ea; font-size:22px;">
+                        S/ {{ avg_salario|floatformat:2 }}
+                    </div>
+                    <div class="kpi-label">Salario promedio</div>
+                    <div class="kpi-sub">Personal activo</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acciones rápidas -->
+        <div class="chart-card card flex-grow-1">
+            <div class="card-header">
+                <i class="bi bi-lightning-fill text-warning me-2"></i>Acciones rápidas
+            </div>
+            <div class="card-body d-flex flex-column gap-2 pt-3">
+                <a href="{% url 'rrhh:crear' %}" class="btn btn-primary rounded-pill w-100">
+                    <i class="bi bi-person-plus-fill me-2"></i>Registrar empleado
+                </a>
+                <a href="{% url 'rrhh:empleados' %}" class="btn btn-outline-primary rounded-pill w-100">
+                    <i class="bi bi-table me-2"></i>Ver plantel completo
+                </a>
+                <a href="{% url 'planilla:lista' %}" class="btn btn-outline-success rounded-pill w-100">
+                    <i class="bi bi-cash-stack me-2"></i>Ir a planilla
+                </a>
+                <a href="{% url 'planilla:calculadora' %}" class="btn btn-outline-warning rounded-pill w-100">
+                    <i class="bi bi-calculator me-2"></i>Calculadora de sueldo
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const COLORS_BAR = [
+    '#2563eb','#3b82f6','#60a5fa','#93c5fd',
+    '#bfdbfe','#1d4ed8','#1e40af','#1e3a8a'
+];
+const COLORS_DONUT_CONTRACT = ['#2563eb','#16a34a','#ca8a04','#9333ea'];
+const COLORS_DONUT_GENDER   = ['#2563eb','#ec4899','#f59e0b'];
+
+// Bar chart — departamentos
+new Chart(document.getElementById('chartDepto'), {
+    type: 'bar',
+    data: {
+        labels: {{ depto_labels|safe }},
+        datasets: [{
+            label: 'Empleados',
+            data:  {{ depto_data|safe }},
+            backgroundColor: COLORS_BAR,
+            borderRadius: 6,
+            borderSkipped: false,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} empleado(s)` } }
+        },
+        scales: {
+            x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+            y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: '#f1f5f9' } }
+        }
+    }
+});
+
+// Donut — tipo contrato
+new Chart(document.getElementById('chartContrato'), {
+    type: 'doughnut',
+    data: {
+        labels: {{ contrato_labels|safe }},
+        datasets: [{
+            data: {{ contrato_data|safe }},
+            backgroundColor: COLORS_DONUT_CONTRACT,
+            borderWidth: 2,
+            borderColor: '#fff',
+            hoverOffset: 6,
+        }]
+    },
+    options: {
+        cutout: '68%',
+        plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10, boxWidth: 12 } }
+        }
+    }
+});
+
+// Donut — género
+new Chart(document.getElementById('chartGenero'), {
+    type: 'doughnut',
+    data: {
+        labels: {{ genero_labels|safe }},
+        datasets: [{
+            data: {{ genero_data|safe }},
+            backgroundColor: COLORS_DONUT_GENDER,
+            borderWidth: 2,
+            borderColor: '#fff',
+            hoverOffset: 6,
+        }]
+    },
+    options: {
+        cutout: '68%',
+        plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10, boxWidth: 12 } }
+        }
+    }
+});
+</script>
+{% endblock %}

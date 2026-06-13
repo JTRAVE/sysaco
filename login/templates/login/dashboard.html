@@ -1,40 +1,167 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard — Sysaco{% endblock %}
+{% block title %}Inicio — Sysaco{% endblock %}
+{% block page_title %}Bienvenido, {{ user.username }} 👋{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">Bienvenido, {{ user.username }}</h2>
 
-<div class="row g-4">
-    <div class="col-md-4">
-        <div class="card shadow-sm h-100 border-primary">
-            <div class="card-body text-center py-4">
-                <h1 class="display-4">👥</h1>
-                <h5 class="card-title">Gestión de Personal</h5>
-                <p class="card-text text-muted">Registra, edita y consulta el personal de la organización.</p>
-                <a href="{% url 'rrhh:lista' %}" class="btn btn-primary">Ir al módulo</a>
+<style>
+    .module-card {
+        border: none;
+        border-radius: 14px;
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+    .module-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.12) !important;
+        color: inherit;
+        text-decoration: none;
+    }
+    .module-card .card-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        margin-bottom: 16px;
+    }
+    .stat-card {
+        border: none;
+        border-radius: 14px;
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    .stat-card .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+    }
+</style>
+
+<!-- Page header -->
+<div class="mb-4">
+    <p class="text-muted mb-0" style="font-size:14px;">Sistema de Administración y Control — Panel principal</p>
+</div>
+
+<!-- Stat summary row -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card shadow-sm bg-white">
+            <div class="stat-icon" style="background:#eff6ff; color:#2563eb;">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div>
+                <div class="text-muted" style="font-size:12px; text-transform:uppercase; letter-spacing:.8px;">Personal</div>
+                <div style="font-size:22px; font-weight:700; color:#1e293b;">Módulo activo</div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card shadow-sm h-100 border-success">
-            <div class="card-body text-center py-4">
-                <h1 class="display-4">💰</h1>
-                <h5 class="card-title">Planilla de Sueldos</h5>
-                <p class="card-text text-muted">Cálculos de remuneraciones según normativa laboral peruana.</p>
-                <a href="{% url 'planilla:lista' %}" class="btn btn-success">Ir al módulo</a>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card shadow-sm bg-white">
+            <div class="stat-icon" style="background:#f0fdf4; color:#16a34a;">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div>
+                <div class="text-muted" style="font-size:12px; text-transform:uppercase; letter-spacing:.8px;">Planilla</div>
+                <div style="font-size:22px; font-weight:700; color:#1e293b;">Módulo activo</div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card shadow-sm h-100 border-warning">
-            <div class="card-body text-center py-4">
-                <h1 class="display-4">🧮</h1>
-                <h5 class="card-title">Calculadora Rápida</h5>
-                <p class="card-text text-muted">Simula sueldos con ONP/AFP, IR 5ta categoría y beneficios sociales.</p>
-                <a href="{% url 'planilla:calculadora' %}" class="btn btn-warning">Calcular</a>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card shadow-sm bg-white">
+            <div class="stat-icon" style="background:#fefce8; color:#ca8a04;">
+                <i class="bi bi-calculator-fill"></i>
+            </div>
+            <div>
+                <div class="text-muted" style="font-size:12px; text-transform:uppercase; letter-spacing:.8px;">Calculadora</div>
+                <div style="font-size:22px; font-weight:700; color:#1e293b;">Disponible</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card shadow-sm bg-white">
+            <div class="stat-icon" style="background:#fdf4ff; color:#9333ea;">
+                <i class="bi bi-shield-check-fill"></i>
+            </div>
+            <div>
+                <div class="text-muted" style="font-size:12px; text-transform:uppercase; letter-spacing:.8px;">Sistema</div>
+                <div style="font-size:22px; font-weight:700; color:#16a34a;">Operativo</div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Section title -->
+<h6 class="text-uppercase text-muted mb-3" style="font-size:11px; letter-spacing:1.2px; font-weight:600;">
+    Acceso rápido a módulos
+</h6>
+
+<!-- Module cards -->
+<div class="row g-4">
+    <div class="col-md-4">
+        <a href="{% url 'rrhh:lista' %}" class="module-card card shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="card-icon" style="background:#eff6ff; color:#2563eb;">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <h5 class="fw-700 mb-2" style="font-weight:700; color:#1e293b;">Gestión de Personal</h5>
+                <p class="text-muted mb-3" style="font-size:14px; line-height:1.5;">
+                    Registra, edita y consulta el personal de la organización con información completa.
+                </p>
+                <span class="btn btn-primary btn-sm rounded-pill px-3">
+                    <i class="bi bi-arrow-right-circle me-1"></i> Ir al módulo
+                </span>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-4">
+        <a href="{% url 'planilla:lista' %}" class="module-card card shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="card-icon" style="background:#f0fdf4; color:#16a34a;">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+                <h5 class="fw-700 mb-2" style="font-weight:700; color:#1e293b;">Planilla de Sueldos</h5>
+                <p class="text-muted mb-3" style="font-size:14px; line-height:1.5;">
+                    Cálculos de remuneraciones según normativa laboral peruana vigente.
+                </p>
+                <span class="btn btn-success btn-sm rounded-pill px-3">
+                    <i class="bi bi-arrow-right-circle me-1"></i> Ir al módulo
+                </span>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-4">
+        <a href="{% url 'planilla:calculadora' %}" class="module-card card shadow-sm h-100">
+            <div class="card-body p-4">
+                <div class="card-icon" style="background:#fefce8; color:#ca8a04;">
+                    <i class="bi bi-calculator-fill"></i>
+                </div>
+                <h5 class="fw-700 mb-2" style="font-weight:700; color:#1e293b;">Calculadora Rápida</h5>
+                <p class="text-muted mb-3" style="font-size:14px; line-height:1.5;">
+                    Simula sueldos con ONP / AFP, IR 5ta categoría y beneficios sociales al instante.
+                </p>
+                <span class="btn btn-warning btn-sm rounded-pill px-3">
+                    <i class="bi bi-arrow-right-circle me-1"></i> Calcular
+                </span>
+            </div>
+        </a>
+    </div>
+</div>
+
 {% endblock %}

@@ -1,11 +1,21 @@
 {% extends "base.html" %}
 
 {% block title %}Empleados — Sysaco{% endblock %}
+{% block page_title %}Capital Humano — Empleados{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Gestión de Personal</h2>
-    <a href="{% url 'rrhh:crear' %}" class="btn btn-primary">+ Nuevo Empleado</a>
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0" style="font-size:13px;">
+                <li class="breadcrumb-item"><a href="{% url 'rrhh:lista' %}" class="text-decoration-none">Capital Humano</a></li>
+                <li class="breadcrumb-item active">Empleados</li>
+            </ol>
+        </nav>
+    </div>
+    <a href="{% url 'rrhh:crear' %}" class="btn btn-primary btn-sm rounded-pill px-3">
+        <i class="bi bi-person-plus-fill me-1"></i> Nuevo Empleado
+    </a>
 </div>
 
 <!-- Filtros -->
