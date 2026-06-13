@@ -104,6 +104,78 @@
         color: #94a3b8;
         margin-bottom: 14px;
     }
+
+    /* ── KPI de Gestión ── */
+    .kpi-mgmt {
+        border: none;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 1px 4px rgba(0,0,0,.06);
+        padding: 20px 22px;
+        height: 100%;
+        transition: transform .2s, box-shadow .2s;
+    }
+    .kpi-mgmt:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0,0,0,.1);
+    }
+    .kpi-mgmt-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+    .kpi-mgmt-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+    .kpi-mgmt-name {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700;
+        color: #64748b;
+        line-height: 1.4;
+    }
+    .kpi-mgmt-value {
+        font-size: 34px;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+    .kpi-mgmt-formula {
+        font-size: 11px;
+        color: #94a3b8;
+        margin-bottom: 14px;
+    }
+    .kpi-progress-track {
+        height: 7px;
+        background: #f1f5f9;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 10px;
+    }
+    .kpi-progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width .7s ease;
+    }
+    .kpi-mgmt-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 11px;
+        color: #64748b;
+    }
+    .badge-kpi-ok    { background:#dcfce7; color:#16a34a; padding:3px 10px; border-radius:20px; font-weight:700; font-size:11px; white-space:nowrap; }
+    .badge-kpi-alert { background:#fee2e2; color:#dc2626; padding:3px 10px; border-radius:20px; font-weight:700; font-size:11px; white-space:nowrap; }
+    .badge-kpi-info  { background:#f1f5f9; color:#64748b; padding:3px 10px; border-radius:20px; font-weight:700; font-size:11px; white-space:nowrap; }
 </style>
 {% endblock %}
 
@@ -176,6 +248,111 @@
                 <div class="kpi-value" style="color:#ca8a04;">{{ nuevos_mes }}</div>
                 <div class="kpi-label">Nuevos este mes</div>
                 <div class="kpi-sub">Ingresos del período</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KPIs de Gestión -->
+<p class="section-title">KPIs de gestión de capital humano</p>
+<div class="row g-3 mb-4">
+
+    <!-- KPI 1: Tasa de Retención -->
+    <div class="col-12 col-lg-4">
+        <div class="kpi-mgmt">
+            <div class="kpi-mgmt-header">
+                <div class="kpi-mgmt-icon" style="background:#eff6ff; color:#2563eb;">
+                    <i class="bi bi-shield-check-fill"></i>
+                </div>
+                <div class="kpi-mgmt-name">Tasa de Retención<br>de Personal</div>
+            </div>
+            <div class="kpi-mgmt-value" style="color:{% if tasa_retencion >= 85 %}#16a34a{% else %}#dc2626{% endif %};">
+                {{ tasa_retencion }}%
+            </div>
+            <div class="kpi-mgmt-formula">
+                ({{ activos }} activos ÷ {{ total }} total) × 100
+            </div>
+            <div class="kpi-progress-track">
+                <div class="kpi-progress-fill"
+                     style="width:{{ tasa_retencion }}%;
+                            background:{% if tasa_retencion >= 85 %}#16a34a{% else %}#dc2626{% endif %};"></div>
+            </div>
+            <div class="kpi-mgmt-footer">
+                <span>Meta: ≥ 85%</span>
+                {% if tasa_retencion >= 85 %}
+                    <span class="badge-kpi-ok">✓ CUMPLE META</span>
+                {% else %}
+                    <span class="badge-kpi-alert">✗ BAJO META</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI 2: Costo Total Planilla Mensual -->
+    <div class="col-12 col-lg-4">
+        <div class="kpi-mgmt">
+            <div class="kpi-mgmt-header">
+                <div class="kpi-mgmt-icon" style="background:#fdf4ff; color:#9333ea;">
+                    <i class="bi bi-cash-coin"></i>
+                </div>
+                <div class="kpi-mgmt-name">Costo Total Planilla<br>Mensual</div>
+            </div>
+            <div class="kpi-mgmt-value" style="color:#9333ea; font-size:26px;">
+                S/ {{ costo_mes_display }}
+            </div>
+            <div class="kpi-mgmt-formula">
+                Σ (Sueldo básico + AF) — activos del período
+            </div>
+            <div class="kpi-progress-track">
+                <div class="kpi-progress-fill"
+                     style="width:{{ planilla_bar }}%;
+                            background:{% if meta_planilla_ok %}#16a34a{% elif meta_planilla_ok == False %}#dc2626{% else %}#94a3b8{% endif %};"></div>
+            </div>
+            <div class="kpi-mgmt-footer">
+                {% if hay_mes_anterior %}
+                    <span>Var. vs mes ant.:&nbsp;
+                        {% if variacion_planilla > 0 %}▲ +{% elif variacion_planilla < 0 %}▼ {% else %}→ {% endif %}{{ variacion_planilla }}%
+                    </span>
+                    {% if meta_planilla_ok %}
+                        <span class="badge-kpi-ok">✓ ESTABLE</span>
+                    {% else %}
+                        <span class="badge-kpi-alert">✗ DESVIACIÓN</span>
+                    {% endif %}
+                {% else %}
+                    <span>Meta: variación ≤ ±3%</span>
+                    <span class="badge-kpi-info">SIN REFERENCIA</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI 3: Turnover -->
+    <div class="col-12 col-lg-4">
+        <div class="kpi-mgmt">
+            <div class="kpi-mgmt-header">
+                <div class="kpi-mgmt-icon" style="background:#fef2f2; color:#dc2626;">
+                    <i class="bi bi-arrow-repeat"></i>
+                </div>
+                <div class="kpi-mgmt-name">Índice de Rotación<br>de Personal (Turnover)</div>
+            </div>
+            <div class="kpi-mgmt-value" style="color:{% if turnover <= 10 %}#16a34a{% else %}#dc2626{% endif %};">
+                {{ turnover }}%
+            </div>
+            <div class="kpi-mgmt-formula">
+                ({{ inactivos }} inactivos ÷ {{ total }} total) × 100
+            </div>
+            <div class="kpi-progress-track">
+                <div class="kpi-progress-fill"
+                     style="width:{{ turnover }}%;
+                            background:{% if turnover <= 10 %}#16a34a{% else %}#dc2626{% endif %};"></div>
+            </div>
+            <div class="kpi-mgmt-footer">
+                <span>Meta: ≤ 10%</span>
+                {% if turnover <= 10 %}
+                    <span class="badge-kpi-ok">✓ CUMPLE META</span>
+                {% else %}
+                    <span class="badge-kpi-alert">✗ SUPERA META</span>
+                {% endif %}
             </div>
         </div>
     </div>

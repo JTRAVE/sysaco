@@ -1,14 +1,16 @@
 import json
 from datetime import date
+from decimal import Decimal
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Q, Count, Avg
+from django.db.models import Q, Count, Avg, Sum
 from django.core.exceptions import PermissionDenied
 
 from .models import Empleado, Departamento
 from .forms import EmpleadoForm
+from planilla.models import RegistroPlanilla
 
 
 @login_required
@@ -60,6 +62,37 @@ def dashboard_rrhh(request):
         .order_by('-fecha_ingreso')[:6]
     )
 
+    # ── KPI 1: Tasa de Retención
+    tasa_retencion = round(activos / total * 100, 1) if total else 0
+
+    # ── KPI 2: Costo Total de Planilla Mensual
+    MONTO_AF = Decimal('102.50')
+
+    pl_mes = RegistroPlanilla.objects.filter(periodo=primer_dia_mes, empleado__estado='activo')
+    costo_basico_mes = pl_mes.aggregate(s=Sum('sueldo_basico'))['s'] or Decimal('0')
+    costo_mes = costo_basico_mes + pl_mes.filter(tiene_asignacion_familiar=True).count() * MONTO_AF
+
+    primer_dia_mes_ant = (
+        hoy.replace(month=hoy.month - 1, day=1) if hoy.month > 1
+        else hoy.replace(year=hoy.year - 1, month=12, day=1)
+    )
+    pl_ant = RegistroPlanilla.objects.filter(periodo=primer_dia_mes_ant, empleado__estado='activo')
+    costo_basico_ant = pl_ant.aggregate(s=Sum('sueldo_basico'))['s'] or Decimal('0')
+    costo_ant = costo_basico_ant + pl_ant.filter(tiene_asignacion_familiar=True).count() * MONTO_AF
+
+    hay_mes_anterior = costo_ant > 0
+    variacion_planilla = (
+        round(float(costo_mes - costo_ant) / float(costo_ant) * 100, 1)
+        if hay_mes_anterior else 0
+    )
+    meta_planilla_ok = abs(variacion_planilla) <= 3 if hay_mes_anterior else None
+    # Barra de progreso: escala ±10% → 0-100%
+    planilla_bar = min(abs(variacion_planilla) / 10 * 100, 100) if hay_mes_anterior else 0
+    costo_mes_display = f"{float(costo_mes):,.2f}"
+
+    # ── KPI 3: Índice de Rotación (Turnover)
+    turnover = round(inactivos / total * 100, 1) if total else 0
+
     return render(request, 'rrhh/dashboard.html', {
         'total':          total,
         'activos':        activos,
@@ -73,6 +106,14 @@ def dashboard_rrhh(request):
         'contrato_data':  json.dumps([c['total'] for c in por_contrato]),
         'genero_labels':  json.dumps([g['label'] for g in por_genero]),
         'genero_data':    json.dumps([g['total'] for g in por_genero]),
+        # KPIs de gestión
+        'tasa_retencion':    tasa_retencion,
+        'costo_mes_display': costo_mes_display,
+        'hay_mes_anterior':  hay_mes_anterior,
+        'variacion_planilla': variacion_planilla,
+        'meta_planilla_ok':  meta_planilla_ok,
+        'planilla_bar':      round(planilla_bar, 1),
+        'turnover':          turnover,
     })
 
 

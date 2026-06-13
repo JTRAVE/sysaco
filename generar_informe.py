@@ -1,514 +1,514 @@
+"""
+Genera el informe DW/DL en formato Word (.docx) con formato profesional.
+Uso: python generar_informe.py
+"""
 from docx import Document
-from docx.shared import Pt, RGBColor, Inches, Cm
+from docx.shared import Pt, RGBColor, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
+# ── Colores corporativos
+AZUL_OSCURO = RGBColor(0x0F, 0x17, 0x2A)
+AZUL_MEDIO  = RGBColor(0x1E, 0x40, 0xAF)
+AZUL_CLARO  = RGBColor(0x37, 0x82, 0xF6)
+BLANCO      = RGBColor(0xFF, 0xFF, 0xFF)
+GRIS_TEXTO  = RGBColor(0x47, 0x55, 0x69)
+
 doc = Document()
 
-# --- Márgenes ---
 for section in doc.sections:
     section.top_margin    = Cm(2.5)
     section.bottom_margin = Cm(2.5)
-    section.left_margin   = Cm(3)
+    section.left_margin   = Cm(3.0)
     section.right_margin  = Cm(2.5)
 
-# --- Estilos base ---
-style_normal = doc.styles['Normal']
-style_normal.font.name = 'Arial'
-style_normal.font.size = Pt(11)
+def set_cell_bg(cell, hex_color):
+    tc   = cell._tc
+    tcPr = tc.get_or_add_tcPr()
+    shd  = OxmlElement('w:shd')
+    shd.set(qn('w:val'),   'clear')
+    shd.set(qn('w:color'), 'auto')
+    shd.set(qn('w:fill'),  hex_color)
+    tcPr.append(shd)
 
-def titulo_principal(texto):
-    p = doc.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = p.add_run(texto)
-    run.font.name = 'Arial'
-    run.font.size = Pt(16)
-    run.font.bold = True
-    run.font.color.rgb = RGBColor(0x1F, 0x35, 0x64)
+def heading(text, level=1, color=None, size=None, bold=True, sb=12, sa=6):
+    p   = doc.add_paragraph()
+    run = p.add_run(text)
+    run.bold = bold
+    run.font.size = Pt(size or (18 if level==1 else 14 if level==2 else 12))
+    run.font.color.rgb = color or (AZUL_OSCURO if level==1 else AZUL_MEDIO if level==2 else AZUL_CLARO)
+    p.paragraph_format.space_before = Pt(sb)
+    p.paragraph_format.space_after  = Pt(sa)
 
-def subtitulo(texto):
-    p = doc.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = p.add_run(texto)
-    run.font.name = 'Arial'
-    run.font.size = Pt(12)
-    run.font.color.rgb = RGBColor(0x40, 0x40, 0x40)
+def body(text, bold=False, italic=False, size=10.5, color=None, sa=4):
+    p   = doc.add_paragraph()
+    run = p.add_run(text)
+    run.bold   = bold
+    run.italic = italic
+    run.font.size = Pt(size)
+    if color:
+        run.font.color.rgb = color
+    p.paragraph_format.space_after = Pt(sa)
 
-def heading1(texto):
-    p = doc.add_heading(level=1)
-    p.clear()
-    run = p.add_run(texto)
-    run.font.name = 'Arial'
-    run.font.size = Pt(14)
-    run.font.bold = True
-    run.font.color.rgb = RGBColor(0x1F, 0x35, 0x64)
+def code_block(text):
+    p   = doc.add_paragraph()
+    run = p.add_run(text)
+    run.font.name  = 'Courier New'
+    run.font.size  = Pt(8.5)
+    run.font.color.rgb = RGBColor(0x1E, 0x29, 0x3B)
+    p.paragraph_format.left_indent  = Cm(0.5)
+    p.paragraph_format.space_after  = Pt(0)
+    p.paragraph_format.space_before = Pt(0)
+    shd = OxmlElement('w:shd')
+    shd.set(qn('w:val'),   'clear')
+    shd.set(qn('w:color'), 'auto')
+    shd.set(qn('w:fill'),  'F1F5F9')
+    p._p.get_or_add_pPr().append(shd)
 
-def heading2(texto):
-    p = doc.add_heading(level=2)
-    p.clear()
-    run = p.add_run(texto)
-    run.font.name = 'Arial'
-    run.font.size = Pt(12)
-    run.font.bold = True
-    run.font.color.rgb = RGBColor(0x2E, 0x74, 0xB5)
-
-def parrafo(texto):
-    p = doc.add_paragraph(texto)
-    p.paragraph_format.space_after = Pt(6)
-    for run in p.runs:
-        run.font.name = 'Arial'
-        run.font.size = Pt(11)
-
-def parrafo_negrita(texto_normal, texto_bold):
-    p = doc.add_paragraph()
-    r1 = p.add_run(texto_normal)
-    r1.font.name = 'Arial'; r1.font.size = Pt(11)
-    r2 = p.add_run(texto_bold)
-    r2.font.name = 'Arial'; r2.font.size = Pt(11); r2.bold = True
-
-def codigo(texto):
-    p = doc.add_paragraph()
-    p.paragraph_format.left_indent = Cm(1)
-    p.paragraph_format.space_before = Pt(4)
-    p.paragraph_format.space_after = Pt(4)
-    run = p.add_run(texto)
-    run.font.name = 'Courier New'
-    run.font.size = Pt(9)
-    run.font.color.rgb = RGBColor(0x20, 0x20, 0x20)
-    shading = OxmlElement('w:shd')
-    shading.set(qn('w:val'), 'clear')
-    shading.set(qn('w:color'), 'auto')
-    shading.set(qn('w:fill'), 'F2F2F2')
-    p._p.get_or_add_pPr().append(shading)
-
-def tabla(headers, rows, col_widths=None):
-    t = doc.add_table(rows=1, cols=len(headers))
+def kpi_table(nombre, formula, valor, perspectiva, fuente, meta):
+    t = doc.add_table(rows=6, cols=2)
     t.style = 'Table Grid'
-    t.alignment = WD_TABLE_ALIGNMENT.CENTER
-    hdr = t.rows[0].cells
-    for i, h in enumerate(headers):
-        hdr[i].text = h
-        for run in hdr[i].paragraphs[0].runs:
-            run.font.bold = True
-            run.font.name = 'Arial'
-            run.font.size = Pt(10)
-        shading = OxmlElement('w:shd')
-        shading.set(qn('w:val'), 'clear')
-        shading.set(qn('w:color'), 'auto')
-        shading.set(qn('w:fill'), '1F3564')
-        hdr[i]._tc.get_or_add_tcPr().append(shading)
-        for para in hdr[i].paragraphs:
-            for run in para.runs:
-                run.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
-    for row in rows:
-        cells = t.add_row().cells
-        for i, val in enumerate(row):
-            cells[i].text = val
-            for run in cells[i].paragraphs[0].runs:
-                run.font.name = 'Arial'
-                run.font.size = Pt(10)
+    labels = ['Nombre del KPI', 'Fórmula de cálculo', 'Valor actual (SYSACO)',
+              'Perspectiva de negocio', 'Fuente en sistema', 'Meta sugerida']
+    values = [nombre, formula, valor, perspectiva, fuente, meta]
+    for i, (lbl, val) in enumerate(zip(labels, values)):
+        row = t.rows[i]
+        set_cell_bg(row.cells[0], '1E40AF')
+        r0 = row.cells[0].paragraphs[0].add_run(lbl)
+        r0.bold = True; r0.font.color.rgb = BLANCO; r0.font.size = Pt(9.5)
+        row.cells[1].paragraphs[0].add_run(val).font.size = Pt(9.5)
     doc.add_paragraph()
 
-def viñeta(texto):
-    p = doc.add_paragraph(style='List Bullet')
-    run = p.add_run(texto)
-    run.font.name = 'Arial'
-    run.font.size = Pt(11)
+# ══ PORTADA ══════════════════════════════════════════════════
+doc.add_paragraph('\n\n')
+p = doc.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+r = p.add_run('INFORME ACADÉMICO')
+r.bold = True; r.font.size = Pt(26); r.font.color.rgb = AZUL_OSCURO
 
-# ================================================================
-# PORTADA
-# ================================================================
-doc.add_paragraph()
-doc.add_paragraph()
-titulo_principal("INFORME TÉCNICO")
-doc.add_paragraph()
-subtitulo("Actividad Evaluativa:")
-subtitulo('"Desarrollo Ágil de Aplicación con')
-subtitulo('Inteligencia Artificial Generativa"')
-doc.add_paragraph()
-doc.add_paragraph()
-subtitulo("Proyecto: SYSACO")
-subtitulo("Sistema de Gestión de Personal y Planilla")
-doc.add_paragraph()
-subtitulo("Repositorio: https://github.com/JTRAVE/sysaco")
-subtitulo("Tecnología: Python 3.12 / Django 5.2 / PostgreSQL / Bootstrap 5")
-subtitulo("Fecha: Mayo 2025")
-doc.add_page_break()
-
-# ================================================================
-# SECCIÓN 1
-# ================================================================
-heading1("1. DESCRIPCIÓN DEL PROBLEMA Y SOLUCIÓN PROPUESTA")
-doc.add_paragraph()
-
-heading2("1.1 Problema identificado")
-parrafo(
-    "Las organizaciones medianas y pequeñas enfrentan dificultades para gestionar de manera "
-    "eficiente el registro de su personal y el cálculo de remuneraciones conforme a la "
-    "normativa laboral vigente en el Perú. Los procesos manuales generan errores en los "
-    "cálculos de descuentos (ONP, AFP, IR 5ta Categoría), beneficios sociales (CTS, "
-    "gratificaciones) y aportes del empleador (EsSalud), lo que puede derivar en "
-    "incumplimientos legales y perjuicios económicos tanto para el trabajador como para "
-    "la empresa."
-)
-
-heading2("1.2 Solución propuesta")
-parrafo(
-    "Se desarrolló SYSACO, una aplicación web construida con el framework Django (Python) "
-    "que centraliza en un solo sistema tres módulos funcionales:"
-)
-tabla(
-    ["Módulo", "Función"],
-    [
-        ["Login",   "Autenticación segura con control de sesiones"],
-        ["RRHH",    "Registro, búsqueda, edición y baja de personal"],
-        ["Planilla","Cálculo automático de remuneraciones según normativa peruana"],
-    ]
-)
-
-heading2("1.3 Conceptos calculados automáticamente")
-parrafo("El sistema implementa los siguientes cálculos según la legislación peruana vigente:")
-viñeta("Asignación Familiar — Ley 25129 (10% del SMV = S/ 102.50)")
-viñeta("EsSalud — Ley 26790 (9% a cargo del empleador)")
-viñeta("ONP — D.L. 19990 (13% a cargo del trabajador)")
-viñeta("AFP — D.L. 25897 (~12.82%: fondo 10% + comisión 1.47% + seguro 1.35%)")
-viñeta("Gratificaciones — Ley 27735 (1 sueldo en julio y diciembre)")
-viñeta("Bonificación Extraordinaria — Ley 29351 (9% sobre la gratificación)")
-viñeta("CTS — D.L. 650 (depósito semestral en mayo y noviembre)")
-viñeta("IR 5ta Categoría — Art. 53 LIR (tramos progresivos con deducción 7 UIT)")
+p = doc.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+r = p.add_run('Data Warehouse, Data Lake y Modelado Multidimensional')
+r.bold = True; r.font.size = Pt(16); r.font.color.rgb = AZUL_MEDIO
 
 doc.add_paragraph()
-parrafo("[Insertar aquí Figura 1: Captura del Dashboard con los 3 módulos]")
-parrafo("[Insertar aquí Figura 2: Captura de la lista de empleados]")
-parrafo("[Insertar aquí Figura 3: Captura de la planilla con totales]")
-doc.add_page_break()
+p = doc.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+r = p.add_run('Sistema: SYSACO — Administración y Control de Personal')
+r.font.size = Pt(13); r.font.color.rgb = GRIS_TEXTO
 
-# ================================================================
-# SECCIÓN 2
-# ================================================================
-heading1("2. JUSTIFICACIÓN DEL USO DE METODOLOGÍAS ÁGILES")
 doc.add_paragraph()
+t = doc.add_table(rows=1, cols=3); t.alignment = WD_TABLE_ALIGNMENT.CENTER; t.style='Table Grid'
+for val, lbl, col in [('1 900','Empleados','1E40AF'),('65 285','Registros planilla','1E40AF'),('2023–2026','Período','1E40AF')]:
+    idx = [('1 900','Empleados','1E40AF'),('65 285','Registros planilla','1E40AF'),('2023–2026','Período','1E40AF')].index((val,lbl,col))
+    c = t.columns[idx].cells[0]; set_cell_bg(c, col)
+    p2 = c.paragraphs[0]; p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    r1 = p2.add_run(val+'\n'); r1.bold=True; r1.font.size=Pt(16); r1.font.color.rgb=BLANCO
+    r2 = p2.add_run(lbl); r2.font.size=Pt(9); r2.font.color.rgb=RGBColor(0xBF,0xDB,0xFE)
 
-heading2("2.1 Metodología aplicada: Scrum")
-parrafo(
-    "Se aplicó la metodología Scrum, organizando el desarrollo en un Sprint de una semana "
-    "con entregables funcionales al finalizar cada historia de usuario. Esta metodología "
-    "fue elegida porque permite entregar valor incremental, adaptarse a cambios de "
-    "requisitos y mantener visibilidad del avance del proyecto en todo momento."
-)
-
-heading2("2.2 Roles del equipo")
-tabla(
-    ["Rol", "Responsabilidad"],
-    [
-        ["Product Owner", "Define las historias de usuario y prioridades del producto"],
-        ["Scrum Master",  "Coordina el equipo y elimina impedimentos del proceso"],
-        ["Developer",     "Implementa las funcionalidades técnicas del sistema"],
-    ]
-)
-
-heading2("2.3 Sprint ejecutado — Sprint 1 (1 semana)")
-tabla(
-    ["Historia de Usuario", "Tarea Técnica", "Estado"],
-    [
-        ["Como admin quiero iniciar sesión de forma segura",  "Módulo login: views, urls, templates",        "✅ Done"],
-        ["Como RRHH quiero registrar empleados",              "Modelo Empleado, CRUD completo, búsqueda",    "✅ Done"],
-        ["Como RRHH quiero calcular sueldos del personal",    "Módulo planilla con calculadora peruana",     "✅ Done"],
-        ["Como RRHH quiero ver la boleta por empleado",       "Vista boleta, template imprimible",           "✅ Done"],
-        ["Como admin quiero datos de prueba en el sistema",   "Comandos poblar_empleados, generar_planilla", "✅ Done"],
-    ]
-)
-
-heading2("2.4 Entregables del Sprint")
-parrafo("Al finalizar el Sprint se entregó una aplicación completamente funcional con:")
-viñeta("30 empleados registrados: 1 gerente (S/ 2,000), 5 administrativos (S/ 1,700) y 24 operarios (S/ 1,250)")
-viñeta("Planilla generada para mayo 2025 con 23 empleados activos")
-viñeta("Boleta de pago individual con todos los conceptos normativos peruanos")
-viñeta("Repositorio en GitHub con historial de versiones")
-
-heading2("2.5 Ventaja frente al modelo tradicional")
-parrafo(
-    "A diferencia del modelo en cascada (Waterfall), Scrum permitió obtener una versión "
-    "funcional del sistema en la primera iteración. Cada módulo fue desarrollado, probado "
-    "y entregado de forma independiente, reduciendo el riesgo de fallos y permitiendo "
-    "validar el funcionamiento real del sistema en cada etapa."
-)
-doc.add_page_break()
-
-# ================================================================
-# SECCIÓN 3
-# ================================================================
-heading1("3. USO DE INTELIGENCIA ARTIFICIAL GENERATIVA EN EL DESARROLLO")
 doc.add_paragraph()
-
-heading2("3.1 Herramienta utilizada")
-parrafo(
-    "Se utilizó Claude Code de Anthropic como herramienta principal de Inteligencia "
-    "Artificial Generativa. Claude Code es un agente de programación que opera directamente "
-    "en el entorno de desarrollo, capaz de leer, escribir y ejecutar código en tiempo real, "
-    "interactuando con el sistema de archivos, la base de datos y el control de versiones."
-)
-
-heading2("3.2 Tareas donde se aplicó la IA")
-tabla(
-    ["Área", "Uso de IA Generativa"],
-    [
-        ["Modelos de datos",    "Diseño de los modelos Empleado, Departamento y RegistroPlanilla"],
-        ["Vistas CRUD",         "Generación de las 5 vistas del módulo RRHH y planilla"],
-        ["Formularios",         "Creación de forms con validación personalizada"],
-        ["Motor de cálculo",    "Implementación de calculadora.py con normativa laboral peruana"],
-        ["Templates HTML",      "Diseño de interfaces responsivas con Bootstrap 5"],
-        ["Base de datos",       "Configuración de PostgreSQL en entorno WSL"],
-        ["Datos de prueba",     "Comandos de gestión para poblar 30 empleados y generar planilla"],
-        ["Control de versiones","Configuración de Git y publicación en GitHub"],
-    ]
-)
-
-heading2("3.3 Impacto medido en el desarrollo")
-tabla(
-    ["Métrica", "Valor"],
-    [
-        ["Tiempo estimado sin IA",       "3 a 4 semanas de desarrollo"],
-        ["Tiempo real con IA",           "1 sesión de trabajo (menos de 1 día)"],
-        ["Líneas de código generadas",   "2,195 líneas en 52 archivos"],
-        ["Errores de sintaxis",          "0 (la IA verificó el código antes de escribirlo)"],
-        ["Módulos funcionales entregados","3 módulos completos (Login, RRHH, Planilla)"],
-    ]
-)
-
-heading2("3.4 Justificación del uso")
-parrafo(
-    "La IA generativa fue utilizada como asistente de programación, no como reemplazo del "
-    "desarrollador. El equipo tomó todas las decisiones de diseño: qué módulos construir, "
-    "qué normativa aplicar, qué datos registrar y cómo estructurar el sistema. La IA "
-    "aceleró la implementación técnica y garantizó consistencia en el estilo del código. "
-    "Este modelo refleja el uso profesional real de herramientas de IA en la industria del "
-    "software, donde el desarrollador mantiene el control y la IA optimiza la productividad."
-)
-doc.add_page_break()
-
-# ================================================================
-# SECCIÓN 4
-# ================================================================
-heading1("4. IMPLEMENTACIÓN DEL MANEJO DE EXCEPCIONES")
-doc.add_paragraph()
-
-heading2("4.1 Estrategia general")
-parrafo("El sistema implementa un manejo de excepciones en cuatro niveles:")
-viñeta("Nivel 1: Validación de entrada en formularios (capa de presentación)")
-viñeta("Nivel 2: Protección de recursos en vistas (capa de negocio)")
-viñeta("Nivel 3: Validación de reglas numéricas en la calculadora (capa de datos)")
-viñeta("Nivel 4: Control de acceso con decoradores de autenticación")
-
-heading2("4.2 Nivel 1 — Validación en formularios (rrhh/forms.py)")
-parrafo(
-    "Se implementaron métodos clean_* que lanzan ValidationError ante datos inválidos. "
-    "Esto garantiza que ningún dato incorrecto llegue a la base de datos:"
-)
-codigo(
-    "def clean_cedula(self):\n"
-    "    cedula = self.cleaned_data.get('cedula', '').strip()\n"
-    "    if not cedula:\n"
-    "        raise forms.ValidationError('La cédula es obligatoria.')\n"
-    "    qs = Empleado.objects.filter(cedula=cedula)\n"
-    "    if self.instance.pk:\n"
-    "        qs = qs.exclude(pk=self.instance.pk)\n"
-    "    if qs.exists():\n"
-    "        raise forms.ValidationError('Ya existe un empleado con esta cédula.')\n"
-    "    return cedula\n\n"
-    "def clean_salario(self):\n"
-    "    salario = self.cleaned_data.get('salario')\n"
-    "    if salario is not None and salario < 0:\n"
-    "        raise forms.ValidationError('El salario no puede ser negativo.')\n"
-    "    return salario"
-)
-parrafo("Excepciones manejadas en este nivel:")
-viñeta("Cédula vacía → ValidationError con mensaje descriptivo al usuario")
-viñeta("Cédula duplicada → ValidationError que evita registros repetidos")
-viñeta("Salario negativo → ValidationError (imposible en la realidad laboral peruana)")
-
-heading2("4.3 Nivel 2 — Protección en vistas (rrhh/views.py)")
-parrafo(
-    "Se utiliza get_object_or_404 en lugar de acceder directamente al objeto. "
-    "Esto devuelve un error HTTP 404 controlado si el recurso no existe, evitando "
-    "que una excepción no controlada DoesNotExist llegue al usuario:"
-)
-codigo(
-    "def editar_empleado(request, pk):\n"
-    "    empleado = get_object_or_404(Empleado, pk=pk)  # HTTP 404 si no existe\n\n"
-    "def eliminar_empleado(request, pk):\n"
-    "    empleado = get_object_or_404(Empleado, pk=pk)\n\n"
-    "def detalle_empleado(request, pk):\n"
-    "    empleado = get_object_or_404(Empleado, pk=pk)"
-)
-
-heading2("4.4 Nivel 3 — Validación numérica en calculadora (planilla/calculadora.py)")
-parrafo(
-    "La calculadora aplica validaciones para garantizar resultados correctos "
-    "según la normativa peruana:"
-)
-codigo(
-    "def calcular_essalud(remuneracion_bruta):\n"
-    "    # Protección: base mínima es el SMV, no puede ser menor\n"
-    "    base = max(remuneracion_bruta, SMV)\n"
-    "    return redondear(base * TASA_ESSALUD)\n\n"
-    "def calcular_ir_5ta_categoria(remuneracion_bruta, gratificacion_semestral):\n"
-    "    ...\n"
-    "    # Protección: la renta neta no puede ser negativa\n"
-    "    renta_neta_anual = max(renta_bruta_anual - deduccion, Decimal('0.00'))"
-)
-
-heading2("4.5 Nivel 4 — Control de acceso (@login_required)")
-parrafo(
-    "Todas las vistas están protegidas con el decorador @login_required, que "
-    "redirige automáticamente al login si el usuario no está autenticado, "
-    "impidiendo el acceso no autorizado a datos del personal:"
-)
-codigo(
-    "@login_required\n"
-    "def lista_empleados(request): ...\n\n"
-    "@login_required\n"
-    "def dashboard(request): ...\n\n"
-    "@login_required\n"
-    "def lista_planillas(request): ..."
-)
-doc.add_page_break()
-
-# ================================================================
-# SECCIÓN 5
-# ================================================================
-heading1("5. CÓDIGO LIMPIO, ESTILO Y REFACTORIZACIÓN")
-doc.add_paragraph()
-
-heading2("5.1 Principios de Robert C. Martin aplicados")
-
-parrafo("a) Nombres descriptivos (Meaningful Names)")
-parrafo(
-    "Todos los identificadores describen claramente su propósito sin necesidad de comentarios:"
-)
-codigo(
-    "# Funciones con nombres que explican exactamente qué calculan\n"
-    "def calcular_asignacion_familiar(tiene_familia: bool) -> Decimal:\n"
-    "def calcular_remuneracion_bruta(sueldo_basico, asignacion_familiar):\n"
-    "def calcular_ir_5ta_categoria(remuneracion_bruta, gratificacion_semestral):\n\n"
-    "# Variables con nombres claros\n"
-    "renta_bruta_anual = remuneracion_bruta * 12 + gratificacion_semestral * 2\n"
-    "renta_neta_anual  = max(renta_bruta_anual - deduccion, Decimal('0.00'))"
-)
-
-parrafo("b) Funciones pequeñas con responsabilidad única (Single Responsibility Principle)")
-parrafo("Cada función en calculadora.py calcula un único concepto:")
-codigo(
-    "def calcular_essalud(remuneracion_bruta):       # solo EsSalud\n"
-    "def calcular_aporte_onp(remuneracion_bruta):    # solo ONP\n"
-    "def calcular_gratificacion(remuneracion_bruta): # solo gratificación\n"
-    "def calcular_cts(remuneracion_bruta, ...):      # solo CTS\n"
-    "def calcular_vacaciones(remuneracion_bruta):    # solo vacaciones"
-)
-
-parrafo("c) Sin números mágicos — Constantes con nombre y referencia legal")
-codigo(
-    "# MAL — números sin contexto\n"
-    "salario * 0.13\n"
-    "salario * 0.09\n\n"
-    "# BIEN — constantes con nombre y sustento legal\n"
-    "TASA_ONP      = Decimal('0.13')    # D.L. 19990\n"
-    "TASA_ESSALUD  = Decimal('0.09')    # Ley 26790\n"
-    "SMV           = Decimal('1025.00') # D.U. 010-2024\n"
-    "UIT           = Decimal('5350.00') # R.M. 000395-2024-EF"
-)
-
-parrafo("d) Propiedad calculada en lugar de campo redundante")
-codigo(
-    "class Empleado(models.Model):\n"
-    "    nombre   = models.CharField(max_length=100)\n"
-    "    apellido = models.CharField(max_length=100)\n\n"
-    "    @property\n"
-    "    def nombre_completo(self):\n"
-    "        return f'{self.nombre} {self.apellido}'\n"
-    "        # Evita almacenar un dato derivable de otros campos"
-)
-
-heading2("5.2 Separación de responsabilidades")
-tabla(
-    ["Archivo", "Responsabilidad única"],
-    [
-        ["models.py",     "Define la estructura de datos y relaciones"],
-        ["forms.py",      "Valida la entrada del usuario"],
-        ["views.py",      "Coordina el request/response HTTP"],
-        ["calculadora.py","Contiene la lógica de negocio (cálculos)"],
-        ["urls.py",       "Define las rutas del módulo"],
-        ["templates/",    "Contiene únicamente la presentación HTML"],
-    ]
-)
-
-heading2("5.3 Refactorizaciones aplicadas")
-tabla(
-    ["Código original", "Código refactorizado", "Motivo"],
-    [
-        ["IP hardcodeada '172.19.64.1'",          "'localhost' con comentario",          "Portabilidad"],
-        ["Dashboard con HTML duplicado",           "Extiende base.html con bloques",      "Reutilización DRY"],
-        ["Lógica de cálculo en views.py",         "Extraída a calculadora.py",           "SRP"],
-        ["Números directos (0.13, 0.09)",         "Constantes TASA_ONP, TASA_ESSALUD",   "Legibilidad"],
-        ["Un solo views.py para todo",            "views.py separado por módulo",        "Modularidad"],
-    ]
-)
-
-heading2("5.4 Estilo de código consistente (PEP 8)")
-viñeta("Indentación: 4 espacios en todo el proyecto")
-viñeta("Nombres de variables y funciones: snake_case (calcular_essalud, tipo_contrato)")
-viñeta("Nombres de clases: PascalCase (EmpleadoForm, RegistroPlanilla)")
-viñeta("Imports organizados: stdlib → Django → módulos propios")
-viñeta("Líneas de máximo 100 caracteres")
-doc.add_page_break()
-
-# ================================================================
-# SECCIÓN 6 - CONCLUSIONES
-# ================================================================
-heading1("6. CONCLUSIONES")
-doc.add_paragraph()
-
-viñeta(
-    "Metodología ágil: La aplicación de Scrum permitió entregar una solución funcional "
-    "completa en una sola iteración, con entregables verificables al finalizar cada historia "
-    "de usuario."
-)
-viñeta(
-    "IA Generativa: Claude Code demostró ser una herramienta efectiva para acelerar el "
-    "desarrollo sin sacrificar calidad. Redujo el tiempo de desarrollo de semanas a horas, "
-    "generando 2,195 líneas de código limpio y modular."
-)
-viñeta(
-    "Manejo de excepciones: Se implementó en cuatro niveles (formularios, vistas, "
-    "calculadora y control de acceso), garantizando que ninguna operación inválida "
-    "afecte la base de datos ni exponga datos sensibles."
-)
-viñeta(
-    "Código limpio: La aplicación de los principios de Robert C. Martin resultó en un "
-    "código modular, legible y fácilmente extensible para futuros módulos del sistema."
-)
-viñeta(
-    "Repositorio: El proyecto está alojado en GitHub con historial de versiones en: "
-    "https://github.com/JTRAVE/sysaco"
-)
+p = doc.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+r = p.add_run('Junio 2026'); r.font.size=Pt(11); r.font.color.rgb=GRIS_TEXTO
 
 doc.add_page_break()
 
-# ================================================================
-# REFERENCIAS
-# ================================================================
-heading1("REFERENCIAS")
+# ══ PARTE I ══════════════════════════════════════════════════
+heading('PARTE I: PREGUNTAS DE DESARROLLO', level=1)
+heading('1. Entendimiento del Negocio y KPIs', level=2)
+body('Empresa: SYSACO  |  Sector: Gestión de Recursos Humanos y Nómina', bold=True)
+body('SYSACO es un sistema web que gestiona el ciclo de vida del personal: registro de empleados, contratos, cálculo de planilla y beneficios sociales bajo normativa laboral peruana. Cuenta con 1 900 empleados en 12 departamentos y 65 285 registros históricos de planilla (enero 2023 – junio 2026).')
 doc.add_paragraph()
-viñeta("Beck, K. et al. (2001). Manifesto for Agile Software Development. agilemanifesto.org")
-viñeta("Martin, R. C. (2008). Clean Code: A Handbook of Agile Software Craftsmanship. Prentice Hall.")
-viñeta("Schwaber, K. & Sutherland, J. (2020). The Scrum Guide. scrumguides.org")
-viñeta("Django Software Foundation. (2024). Django 5.2 Documentation. djangoproject.com")
-viñeta("Anthropic. (2025). Claude Code Documentation. anthropic.com")
-viñeta("SUNAT. (2025). UIT 2025: S/ 5,350. R.M. 000395-2024-EF.")
-viñeta("Ministerio de Trabajo del Perú. (2024). SMV: S/ 1,025. D.U. 010-2024.")
 
-# --- Guardar ---
-doc.save('/home/jtrave/proyectos/sysaco/INFORME_TECNICO.docx')
-print("✅ INFORME_TECNICO.docx generado correctamente.")
+heading('KPI 1 — Tasa de Retención de Personal', level=3, size=11, color=AZUL_MEDIO, sb=8)
+kpi_table('Tasa de Retención de Personal',
+    '(Empleados activos al cierre del período ÷ Empleados activos al inicio del período) × 100',
+    '(1 500 ÷ 1 900) × 100 = 78.9 %',
+    'Mide la capacidad de la organización para retener a su capital humano. Una tasa alta indica estabilidad laboral, clima organizacional saludable y bajo costo de reposición. La alta gerencia lo utiliza para evaluar las políticas de compensación y bienestar.',
+    'Tabla rrhh_empleado, campo estado (activo / inactivo)',
+    '≥ 85 % (estándar del sector)')
+
+heading('KPI 2 — Costo Total de Planilla Mensual', level=3, size=11, color=AZUL_MEDIO, sb=8)
+kpi_table('Costo Total de Planilla Mensual',
+    'Σ (sueldo_básico + asignación_familiar) de todos los empleados activos del período',
+    'S/ 3 868 667.46 — junio 2026 (1 573 registros activos)',
+    'Mide el gasto total en remuneraciones por período y por departamento. Permite a gerencia financiera controlar el presupuesto de personal, detectar desviaciones frente al presupuesto anual y comparar eficiencia entre áreas.',
+    'Tabla planilla_registroplanilla, campos sueldo_basico y tiene_asignacion_familiar',
+    'Variación ≤ ±3 % respecto al mes anterior')
+
+heading('KPI 3 — Índice de Rotación de Personal (Turnover)', level=3, size=11, color=AZUL_MEDIO, sb=8)
+kpi_table('Índice de Rotación de Personal',
+    '(N.° empleados con cese en el período ÷ ((Empleados inicio + Empleados fin) ÷ 2)) × 100',
+    '(400 ÷ 1 900) × 100 = 21.1 %  ⚠ Supera el estándar recomendado',
+    'Mide la proporción de empleados que abandonaron la organización. Un índice elevado implica altos costos de reclutamiento, capacitación y pérdida de conocimiento institucional. Es crítico para revisar contratos, condiciones salariales y cultura organizacional.',
+    'Tabla rrhh_empleado, campos estado = "inactivo" y motivo_salida',
+    '≤ 10 % anual')
+
+doc.add_paragraph()
+heading('Top 5 departamentos por costo de planilla', level=3, size=10, color=GRIS_TEXTO, sb=4)
+t = doc.add_table(rows=6, cols=3); t.style='Table Grid'
+for j, h in enumerate(['Departamento','Empleados Activos','Costo Planilla (S/)']):
+    set_cell_bg(t.rows[0].cells[j],'0F172A')
+    r = t.rows[0].cells[j].paragraphs[0].add_run(h)
+    r.bold=True; r.font.color.rgb=BLANCO; r.font.size=Pt(9.5)
+for i,(dep,emp,costo) in enumerate([('Ventas','222','557 856.62'),('Operaciones','198','503 908.38'),
+    ('Producción','222','495 552.89'),('Logística','179','418 279.26'),('Tecnología','100','366 740.79')]):
+    bg='F8FAFC' if i%2==0 else 'FFFFFF'
+    row=t.rows[i+1]
+    for j,val in enumerate([dep,emp,costo]):
+        set_cell_bg(row.cells[j],bg); row.cells[j].paragraphs[0].add_run(val).font.size=Pt(9.5)
+
+doc.add_page_break()
+
+# ══ TABLA COMPARATIVA ════════════════════════════════════════
+heading('2. Cuadro Comparativo: Data Warehouse vs. Data Lake', level=2)
+
+heading('Diagrama de Arquitectura — Data Warehouse', level=3, size=10, color=GRIS_TEXTO, sb=6)
+for line in [
+    '┌──────────────────────────────────────────────────────────────────┐',
+    '│              ARQUITECTURA  DATA  WAREHOUSE                        │',
+    '│  ┌──────────┐  ┌──────────┐  ┌────────────────┐  ┌───────────┐ │',
+    '│  │  FUENTES │  │   ETL    │  │  DATA WAREHOUSE │  │  CONSUMO  │ │',
+    '│  │  OLTP    │─▶│ Extract  │─▶│  Staging ──▶   │─▶│ Power BI  │ │',
+    '│  │ SYSACO:  │  │ Transform│  │  Data Mart      │  │ Tableau   │ │',
+    '│  │ empleados│  │  Load    │  │ FACT_REMUNER.   │  │ KPIs      │ │',
+    '│  │ planilla │  │ Limpieza │  │ DIM_EMPLEADO    │  │ Gerencia  │ │',
+    '│  │ deptos   │  │ Validac. │  │ DIM_DEPARTAMTO  │  └───────────┘ │',
+    '│  └──────────┘  └──────────┘  │ DIM_TIEMPO      │               │',
+    '│                               │ DIM_CONTRATO    │               │',
+    '│                               └────────────────┘               │',
+    '│  Esquema: Schema-on-Write  |  Datos: Estructurados               │',
+    '└──────────────────────────────────────────────────────────────────┘',
+]:
+    code_block(line)
+doc.add_paragraph()
+
+heading('Diagrama de Arquitectura — Data Lake', level=3, size=10, color=GRIS_TEXTO, sb=6)
+for line in [
+    '┌──────────────────────────────────────────────────────────────────┐',
+    '│                    ARQUITECTURA  DATA  LAKE                       │',
+    '│  ┌──────────┐  ┌──────────────────────────────────────────────┐ │',
+    '│  │  FUENTES │  │              DATA LAKE                        │ │',
+    '│  │ SYSACO   │─▶│ ┌──────────┐  ┌──────────┐  ┌───────────┐  │ │',
+    '│  │ (DB,JSON)│  │ │  BRONZE  │─▶│  SILVER  │─▶│   GOLD    │  │ │',
+    '│  │ + Logs   │  │ │  RAW     │  │ Filtrado │  │  Curado   │  │ │',
+    '│  │ + PDFs   │  │ └──────────┘  └──────────┘  └───────────┘  │ │',
+    '│  └──────────┘  └──────────────────────────────────────────────┘ │',
+    '│                          │                                        │',
+    '│            ┌─────────────────────────────────────┐               │',
+    '│            │  ML/IA  | Análisis Ad-hoc  |  OLAP  │               │',
+    '│            └─────────────────────────────────────┘               │',
+    '│  Esquema: Schema-on-Read   |  Datos: Cualquier formato            │',
+    '└──────────────────────────────────────────────────────────────────┘',
+]:
+    code_block(line)
+doc.add_paragraph()
+
+heading('Tabla Comparativa', level=3, size=10, color=GRIS_TEXTO, sb=4)
+criterios = [
+    ('Tipo de datos soportados',
+     'Solo datos ESTRUCTURADOS: tablas con esquema fijo.\nEj. SYSACO: rrhh_empleado, planilla_registroplanilla con campos numéricos y fechas definidos.',
+     'Cualquier tipo: ESTRUCTURADOS (CSV), SEMIESTRUCTURADOS (JSON, XML) y NO ESTRUCTURADOS (PDFs de contratos, imágenes de DNI, correos, logs del sistema).'),
+    ('Esquema\n(Schema-on-write vs. Schema-on-read)',
+     'Schema-on-Write: el esquema se define y valida ANTES de cargar los datos. En SYSACO, Django Migrations define columnas antes de insertar. Si un dato no cumple el tipo es rechazado.',
+     'Schema-on-Read: los datos se almacenan en bruto. El esquema se aplica AL MOMENTO DE LEERLOS con Spark o AWS Glue. Permite guardar primero y estructurar después.'),
+    ('Usuarios principales y velocidad de procesamiento',
+     'Usuarios: Analistas de negocio, gerentes, contadores (Power BI, Tableau).\nVelocidad: ALTA en consultas analíticas. En SYSACO: costo de planilla por departamento en milisegundos con índices pre-calculados.',
+     'Usuarios: Científicos de datos, ingenieros de ML.\nVelocidad: Lento para consultas simples, superior para procesamiento masivo. Ej.: analizar 65 285 registros para predecir rotación con IA.'),
+    ('Orientación\n(OLAP vs. Análisis predictivo)',
+     'OLAP: responde preguntas históricas estructuradas.\n"¿Cuánto costó la planilla de Producción en Q1 2025?"\nRespuestas deterministas y rápidas.',
+     'Análisis predictivo / exploratorio: descubre patrones ocultos.\n"¿Qué empleados tienen mayor probabilidad de renunciar en 3 meses?"\nCombina datos SYSACO + variables externas.'),
+    ('Costo de almacenamiento',
+     'Alto: requiere servidores potentes (SQL Server, Redshift, Snowflake). El diseño limpio implica ETL costoso en tiempo y recursos.',
+     'Bajo: almacenamiento en objetos (S3, Azure Data Lake, HDFS). Guardar los 65 285 registros de SYSACO cuesta fracciones de centavo en la nube.'),
+    ('Calidad del dato',
+     'Alta: cada registro pasa por transformaciones y validaciones. En SYSACO, Django ORM valida cada RegistroPlanilla antes de persistirlo.',
+     'Variable: los datos entran sin filtro (Bronze). La calidad se garantiza en capas Silver y Gold. Puede contener duplicados en la capa Raw.'),
+    ('Caso de uso en SYSACO',
+     'Dashboard de Capital Humano: KPIs de retención, costo de planilla por departamento, distribución por contrato. Datos 2023-2026 para consultas OLAP inmediatas.',
+     'Almacenar logs de acceso, contratos en PDF, historial salarial en JSON crudo, para construir modelos predictivos de rotación o detección de anomalías en planilla.'),
+]
+t = doc.add_table(rows=len(criterios)+1, cols=3); t.style='Table Grid'
+for j,h in enumerate(['Criterio de Comparación','Data Warehouse (DW)','Data Lake (DL)']):
+    set_cell_bg(t.rows[0].cells[j],'0F172A')
+    r=t.rows[0].cells[j].paragraphs[0].add_run(h)
+    r.bold=True; r.font.color.rgb=BLANCO; r.font.size=Pt(9.5)
+    t.rows[0].cells[j].paragraphs[0].alignment=WD_ALIGN_PARAGRAPH.CENTER
+for i,(crit,dw,dl) in enumerate(criterios):
+    bg='EFF6FF' if i%2==0 else 'FFFFFF'
+    row=t.rows[i+1]
+    set_cell_bg(row.cells[0],'DBEAFE')
+    rc=row.cells[0].paragraphs[0].add_run(crit); rc.bold=True; rc.font.size=Pt(9); rc.font.color.rgb=AZUL_OSCURO
+    for j,val in enumerate([dw,dl]):
+        set_cell_bg(row.cells[j+1],bg); row.cells[j+1].paragraphs[0].add_run(val).font.size=Pt(9)
+
+doc.add_page_break()
+
+# ══ PARTE II ═════════════════════════════════════════════════
+heading('PARTE II: ACTIVIDAD PRÁCTICA — Modelado Estrella', level=1)
+body('Nota: SYSACO gestiona Recursos Humanos y Planilla. Se aplica la misma metodología de Modelo Estrella adaptando el proceso de negocio a Gestión de Remuneraciones, equivalente al proceso de Ventas en una empresa comercial.', italic=True, color=GRIS_TEXTO)
+doc.add_paragraph()
+
+heading('Tablas OLTP de Origen (Input)', level=2)
+for line in [
+    'rrhh_departamento          rrhh_empleado',
+    '─────────────────          ──────────────────────────────',
+    'id           (PK)          id               (PK)',
+    'nombre                     nombre / apellido',
+    '                           cedula           (UNIQUE)',
+    '                           cargo',
+    '                           departamento_id  (FK)',
+    '                           fecha_ingreso',
+    '                           tipo_contrato',
+    '                           salario / estado',
+    '',
+    'planilla_registroplanilla',
+    '──────────────────────────',
+    'id                   (PK)',
+    'empleado_id          (FK → empleado)',
+    'periodo              (DATE — primer día del mes)',
+    'sueldo_basico',
+    'tiene_asignacion_familiar',
+    'tipo_pension',
+]:
+    code_block(line)
+doc.add_paragraph()
+
+heading('Diseño del Modelo Estrella', level=2)
+t = doc.add_table(rows=6, cols=3); t.style='Table Grid'
+for j,h in enumerate(['Componente','Tabla','Justificación']):
+    set_cell_bg(t.rows[0].cells[j],'0F172A')
+    r=t.rows[0].cells[j].paragraphs[0].add_run(h)
+    r.bold=True; r.font.color.rgb=BLANCO; r.font.size=Pt(9.5)
+rows2=[('Tabla de Hechos','FACT_REMUNERACION','Cada registro es un pago mensual; contiene métricas: sueldo, descuentos, neto'),
+       ('Dimensión 1','DIM_EMPLEADO','Quién recibe la remuneración (≡ Cliente en Ventas)'),
+       ('Dimensión 2','DIM_DEPARTAMENTO','Dónde trabaja (≡ Región/Ciudad en Ventas)'),
+       ('Dimensión 3','DIM_TIEMPO','Cuándo se realizó el pago: mes, trimestre, año'),
+       ('Dimensión 4','DIM_CONTRATO','Modalidad laboral (≡ Categoría de Producto en Ventas)')]
+for i,(comp,tabla,just) in enumerate(rows2):
+    bg='EFF6FF' if i%2==0 else 'FFFFFF'
+    row=t.rows[i+1]; set_cell_bg(row.cells[0],'DBEAFE')
+    r=row.cells[0].paragraphs[0].add_run(comp); r.bold=True; r.font.size=Pt(9.5)
+    for j,val in enumerate([tabla,just]):
+        set_cell_bg(row.cells[j+1],bg); row.cells[j+1].paragraphs[0].add_run(val).font.size=Pt(9.5)
+doc.add_paragraph()
+
+heading('Diagrama ERD — Modelo Estrella', level=3, size=11, color=GRIS_TEXTO)
+for line in [
+    '                    ┌─────────────────────────┐',
+    '                    │       DIM_TIEMPO         │',
+    '                    │ id_tiempo      PK        │',
+    '                    │ periodo                  │',
+    '                    │ mes / nombre_mes         │',
+    '                    │ trimestre / semestre     │',
+    '                    │ anio                     │',
+    '                    └────────────┬─────────────┘',
+    '                                 │ FK',
+    ' ┌──────────────────┐            │         ┌──────────────────────┐',
+    ' │   DIM_EMPLEADO   │            │         │  DIM_DEPARTAMENTO    │',
+    ' │ id_empleado  PK  │            │         │ id_departamento  PK  │',
+    ' │ nombre_completo  ├────FK──────┤──FK─────┤ nombre_departamento  │',
+    ' │ cargo / genero   │    ┌───────┴──────────────────────┐         │',
+    ' │ estado           │    │    FACT_REMUNERACION          │         │',
+    ' └──────────────────┘ FK │ id_registro         PK       │         │',
+    '         └─────────────▶ │ id_tiempo    FK              │         │',
+    '                         │ id_empleado  FK              │         │',
+    '                         │ id_departamento  FK          │   FK    │',
+    '                         │ id_contrato  FK              │─────────┘',
+    '                         │ sueldo_basico  [métrica]     │',
+    '                         │ asignacion_familiar [métrica]│',
+    '                         │ descuento_pension  [métrica] │',
+    '                         │ sueldo_bruto  [métrica]      │',
+    '                         │ sueldo_neto   [métrica]      │',
+    '                         └──────────────────────────────┘',
+    '                                      │ FK',
+    '                    ┌─────────────────┴────────────────┐',
+    '                    │         DIM_CONTRATO              │',
+    '                    │ id_contrato       PK              │',
+    '                    │ tipo_contrato                     │',
+    '                    │ descripcion                       │',
+    '                    │ sistema_pension                   │',
+    '                    └───────────────────────────────────┘',
+]:
+    code_block(line)
+
+doc.add_page_break()
+
+heading('Código SQL — Creación de Tablas e Inserción de Datos', level=2)
+sql_lines = """-- ═══════════════════════════════════════════════════════════
+--  MODELO ESTRELLA SYSACO: Gestión de Remuneraciones
+-- ═══════════════════════════════════════════════════════════
+
+-- ── DIMENSIÓN: TIEMPO ──────────────────────────────────────
+CREATE TABLE DIM_TIEMPO (
+    id_tiempo   SERIAL       PRIMARY KEY,
+    periodo     DATE         NOT NULL,
+    mes         SMALLINT     NOT NULL,
+    nombre_mes  VARCHAR(20)  NOT NULL,
+    trimestre   SMALLINT     NOT NULL,
+    semestre    SMALLINT     NOT NULL,
+    anio        SMALLINT     NOT NULL
+);
+INSERT INTO DIM_TIEMPO (periodo,mes,nombre_mes,trimestre,semestre,anio) VALUES
+    ('2025-01-01', 1,'Enero',   1,1,2025),
+    ('2025-04-01', 4,'Abril',   2,1,2025),
+    ('2025-07-01', 7,'Julio',   3,2,2025),
+    ('2025-10-01',10,'Octubre', 4,2,2025),
+    ('2026-01-01', 1,'Enero',   1,1,2026),
+    ('2026-04-01', 4,'Abril',   2,1,2026),
+    ('2026-06-01', 6,'Junio',   2,1,2026);
+
+-- ── DIMENSIÓN: DEPARTAMENTO ────────────────────────────────
+CREATE TABLE DIM_DEPARTAMENTO (
+    id_departamento     SERIAL      PRIMARY KEY,
+    nombre_departamento VARCHAR(80) NOT NULL,
+    area_negocio        VARCHAR(40) NOT NULL
+);
+INSERT INTO DIM_DEPARTAMENTO (nombre_departamento,area_negocio) VALUES
+    ('Gerencia','Dirección'),('Administración','Soporte'),
+    ('Recursos Humanos','Soporte'),('Contabilidad','Finanzas'),
+    ('Finanzas','Finanzas'),('Producción','Operaciones'),
+    ('Almacén','Operaciones'),('Logística','Operaciones'),
+    ('Operaciones','Operaciones'),('Tecnología','Soporte'),
+    ('Ventas','Comercial'),('Marketing','Comercial');
+
+-- ── DIMENSIÓN: EMPLEADO ────────────────────────────────────
+CREATE TABLE DIM_EMPLEADO (
+    id_empleado     SERIAL       PRIMARY KEY,
+    nombre_completo VARCHAR(200) NOT NULL,
+    cargo           VARCHAR(100) NOT NULL,
+    genero          CHAR(1)      NOT NULL,
+    estado          VARCHAR(10)  NOT NULL
+);
+INSERT INTO DIM_EMPLEADO (nombre_completo,cargo,genero,estado) VALUES
+    ('José García Torres',   'Gerente General',       'M','activo'),
+    ('María López Quispe',   'Jefa de Finanzas',      'F','activo'),
+    ('Carlos Mamani Flores', 'Desarrollador Senior',  'M','activo'),
+    ('Patricia Condori Vega','Analista Contable',     'F','activo'),
+    ('Diego Torres Huanca',  'Ejecutivo de Ventas',   'M','activo'),
+    ('Rosa Vargas Chávez',   'Analista de RRHH',      'F','activo'),
+    ('Marco Salinas Ramos',  'Jefe de Producción',    'M','activo'),
+    ('Sandra Herrera Díaz',  'Coord. Logística',      'F','inactivo'),
+    ('Víctor Espinoza Cruz', 'Operario',              'M','inactivo'),
+    ('Lucía Mendoza Rojas',  'Community Manager',     'F','activo');
+
+-- ── DIMENSIÓN: CONTRATO ────────────────────────────────────
+CREATE TABLE DIM_CONTRATO (
+    id_contrato     SERIAL       PRIMARY KEY,
+    tipo_contrato   VARCHAR(30)  NOT NULL,
+    descripcion     VARCHAR(150) NOT NULL,
+    sistema_pension VARCHAR(3)   NOT NULL
+);
+INSERT INTO DIM_CONTRATO (tipo_contrato,descripcion,sistema_pension) VALUES
+    ('indefinido','Contrato indefinido, plena estabilidad laboral','ONP'),
+    ('indefinido','Contrato indefinido, plena estabilidad laboral','AFP'),
+    ('plazo_fijo','Contrato sujeto a modalidad, duración determinada','ONP'),
+    ('honorarios','Locación de servicios, sin relación de dependencia','AFP'),
+    ('pasantia',  'Prácticas preprofesionales, sueldo reducido','ONP');
+
+-- ── TABLA DE HECHOS ────────────────────────────────────────
+CREATE TABLE FACT_REMUNERACION (
+    id_registro         SERIAL        PRIMARY KEY,
+    id_tiempo           INT           NOT NULL REFERENCES DIM_TIEMPO(id_tiempo),
+    id_empleado         INT           NOT NULL REFERENCES DIM_EMPLEADO(id_empleado),
+    id_departamento     INT           NOT NULL REFERENCES DIM_DEPARTAMENTO(id_departamento),
+    id_contrato         INT           NOT NULL REFERENCES DIM_CONTRATO(id_contrato),
+    sueldo_basico       NUMERIC(10,2) NOT NULL,
+    asignacion_familiar NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+    descuento_pension   NUMERIC(10,2) NOT NULL,
+    sueldo_bruto        NUMERIC(10,2) NOT NULL,
+    sueldo_neto         NUMERIC(10,2) NOT NULL
+);
+-- Cálculos: bruto = básico + AF | ONP = bruto×0.13 | AFP = bruto×0.10
+INSERT INTO FACT_REMUNERACION
+  (id_tiempo,id_empleado,id_departamento,id_contrato,
+   sueldo_basico,asignacion_familiar,descuento_pension,sueldo_bruto,sueldo_neto)
+VALUES
+  (1,1, 1,1,6500.00,102.50, 862.33,6602.50,5740.18),
+  (1,2, 5,2,4200.00,102.50, 430.25,4302.50,3872.25),
+  (1,3,10,2,3800.00,  0.00, 380.00,3800.00,3420.00),
+  (1,4, 4,3,2100.00,102.50, 286.33,2202.50,1916.18),
+  (1,5,11,3,1650.00,  0.00, 214.50,1650.00,1435.50),
+  (2,1, 1,1,6500.00,102.50, 862.33,6602.50,5740.18),
+  (2,6, 3,1,1900.00,102.50, 260.33,2002.50,1742.18),
+  (2,7, 6,3,3200.00,  0.00, 416.00,3200.00,2784.00),
+  (3,3,10,2,3850.00,  0.00, 385.00,3850.00,3465.00),
+  (5,5,11,3,1720.00,102.50, 237.33,1822.50,1585.18);""".split('\n')
+
+for line in sql_lines:
+    code_block(line)
+doc.add_paragraph()
+
+heading('Consulta OLAP — Explotación de Datos', level=2)
+body('Consulta analítica que consolida remuneraciones totales agrupadas por Departamento y Tipo de Contrato durante el año 2025 (equivalente a "ventas por Categoría de Producto y Ciudad del Cliente"):')
+doc.add_paragraph()
+
+olap_lines = """-- ═══════════════════════════════════════════════════════════
+-- OLAP: Consolidado por Departamento y Tipo de Contrato 2025
+-- ═══════════════════════════════════════════════════════════
+SELECT
+    d.nombre_departamento      AS departamento,
+    d.area_negocio             AS area,
+    c.tipo_contrato            AS modalidad_contrato,
+    t.trimestre,  t.anio,
+    COUNT(f.id_registro)       AS total_pagos,
+    SUM(f.sueldo_basico)       AS total_sueldo_basico,
+    SUM(f.sueldo_bruto)        AS total_bruto,
+    SUM(f.sueldo_neto)         AS total_neto,
+    AVG(f.sueldo_neto)         AS promedio_neto,
+    MAX(f.sueldo_neto)         AS sueldo_max,
+    MIN(f.sueldo_neto)         AS sueldo_min
+FROM  FACT_REMUNERACION   f
+JOIN  DIM_TIEMPO           t ON f.id_tiempo       = t.id_tiempo
+JOIN  DIM_EMPLEADO         e ON f.id_empleado     = e.id_empleado
+JOIN  DIM_DEPARTAMENTO     d ON f.id_departamento = d.id_departamento
+JOIN  DIM_CONTRATO         c ON f.id_contrato     = c.id_contrato
+WHERE t.anio = 2025
+  AND e.estado = 'activo'
+GROUP BY ROLLUP(d.area_negocio, d.nombre_departamento, c.tipo_contrato, t.trimestre)
+ORDER BY d.area_negocio, d.nombre_departamento, t.trimestre;
+
+-- ── Comparativo interanual 2024 vs 2025 ─────────────────────
+SELECT
+    d.nombre_departamento,
+    SUM(CASE WHEN t.anio=2024 THEN f.sueldo_neto ELSE 0 END) AS total_2024,
+    SUM(CASE WHEN t.anio=2025 THEN f.sueldo_neto ELSE 0 END) AS total_2025,
+    ROUND(
+      (SUM(CASE WHEN t.anio=2025 THEN f.sueldo_neto ELSE 0 END) -
+       SUM(CASE WHEN t.anio=2024 THEN f.sueldo_neto ELSE 0 END))
+      / NULLIF(SUM(CASE WHEN t.anio=2024 THEN f.sueldo_neto ELSE 0 END),0)*100
+    ,2) AS variacion_pct
+FROM FACT_REMUNERACION f
+JOIN DIM_TIEMPO       t ON f.id_tiempo=t.id_tiempo
+JOIN DIM_DEPARTAMENTO d ON f.id_departamento=d.id_departamento
+WHERE t.anio IN (2024,2025)
+GROUP BY d.nombre_departamento
+ORDER BY total_2025 DESC;""".split('\n')
+
+for line in olap_lines:
+    code_block(line)
+
+doc.add_page_break()
+
+# ══ CONCLUSIONES ════════════════════════════════════════════
+heading('Conclusiones', level=2)
+conclusiones = [
+    ('DW vs DL en SYSACO: ',
+     'El sistema opera actualmente como OLTP. Para construir el Data Warehouse se aplica ETL hacia el modelo estrella diseñado. El Data Lake es útil para almacenar contratos PDF, logs y datos de mercado laboral destinados a modelos predictivos de rotación.'),
+    ('Alerta en KPI de Rotación: ',
+     'La Tasa de Retención (78.9%) está por debajo del estándar recomendado de ≥ 85%. El Índice de Rotación (21.1%) con 400 empleados inactivos supera el límite de 10% anual. Se recomienda revisar motivos de salida y políticas de compensación por departamento.'),
+    ('Valor del Modelo Estrella: ',
+     'El modelo diseñado permite responder preguntas OLAP como "¿cuánto se invirtió en planilla en Producción en Q3 2025?" en milisegundos, imposible con consultas directas sobre la base OLTP con 65 285 registros históricos. GROUP BY ROLLUP genera subtotales automáticos por jerarquía.'),
+]
+for titulo, texto in conclusiones:
+    p = doc.add_paragraph()
+    r1 = p.add_run(titulo); r1.bold=True; r1.font.size=Pt(10.5); r1.font.color.rgb=AZUL_OSCURO
+    r2 = p.add_run(texto);  r2.font.size=Pt(10.5)
+    p.paragraph_format.space_after = Pt(8)
+
+doc.add_paragraph()
+p = doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER
+r = p.add_run('─── Fin del Informe — SYSACO, junio 2026 ───')
+r.font.size=Pt(9); r.font.color.rgb=GRIS_TEXTO; r.italic=True
+
+out = '/home/jtrave/proyectos/sysaco/Informe_DW_DL_SYSACO.docx'
+doc.save(out)
+print(f'Documento generado: {out}')
