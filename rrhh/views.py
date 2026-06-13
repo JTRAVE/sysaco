@@ -6,9 +6,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q, Count, Avg, Sum
-from django.core.exceptions import PermissionDenied
-
-from .models import Empleado, Departamento
+from .models import Empleado
 from .forms import EmpleadoForm
 from planilla.models import RegistroPlanilla
 
@@ -18,9 +16,9 @@ def dashboard_rrhh(request):
     hoy = date.today()
     primer_dia_mes = hoy.replace(day=1)
 
-    total      = Empleado.objects.count()
-    activos    = Empleado.objects.filter(estado='activo').count()
-    inactivos  = Empleado.objects.filter(estado='inactivo').count()
+    total = Empleado.objects.count()
+    activos = Empleado.objects.filter(estado='activo').count()
+    inactivos = Empleado.objects.filter(estado='inactivo').count()
     nuevos_mes = Empleado.objects.filter(fecha_ingreso__gte=primer_dia_mes).count()
     avg_salario = (
         Empleado.objects.filter(estado='activo')
@@ -102,7 +100,7 @@ def dashboard_rrhh(request):
         'ultimos':        ultimos,
         'depto_labels':   json.dumps([d['departamento__nombre'] for d in por_depto]),
         'depto_data':     json.dumps([d['total'] for d in por_depto]),
-        'contrato_labels':json.dumps([c['label'] for c in por_contrato]),
+        'contrato_labels': json.dumps([c['label'] for c in por_contrato]),
         'contrato_data':  json.dumps([c['total'] for c in por_contrato]),
         'genero_labels':  json.dumps([g['label'] for g in por_genero]),
         'genero_data':    json.dumps([g['total'] for g in por_genero]),
@@ -150,7 +148,7 @@ def crear_empleado(request):
         form = EmpleadoForm(request.POST)
         if form.is_valid():
             empleado = form.save()
-            messages.success(request, f'Empleado "{empleado.nombre_completo}" registrado correctamente.')
+            messages.success(request, f'Empleado "{empleado.nombre_completo}" registrado.')
             return redirect('rrhh:empleados')
     else:
         form = EmpleadoForm()
@@ -166,12 +164,14 @@ def editar_empleado(request, pk):
         form = EmpleadoForm(request.POST, instance=empleado)
         if form.is_valid():
             form.save()
-            messages.success(request, f'Empleado "{empleado.nombre_completo}" actualizado correctamente.')
+            messages.success(request, f'Empleado "{empleado.nombre_completo}" actualizado.')
             return redirect('rrhh:empleados')
     else:
         form = EmpleadoForm(instance=empleado)
 
-    return render(request, 'rrhh/form.html', {'form': form, 'titulo': f'Editar: {empleado.nombre_completo}'})
+    return render(request, 'rrhh/form.html', {
+        'form': form, 'titulo': f'Editar: {empleado.nombre_completo}',
+    })
 
 
 @login_required

@@ -32,7 +32,6 @@ class PlanillaForm(forms.ModelForm):
         return sueldo
 
     def clean_periodo(self):
-        from datetime import date
         periodo = self.cleaned_data.get('periodo')
         if periodo:
             return periodo.replace(day=1)
