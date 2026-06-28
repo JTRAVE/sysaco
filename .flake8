@@ -7,7 +7,8 @@ exclude =
     venv,
     .venv,
     staticfiles,
-    generar_informe.py
+    generar_informe.py,
+    generar_informe_tdd.py
 per-file-ignores =
     sysaco/settings*.py: E501
     rrhh/management/commands/*.py: E501,E221,E225,E228,E231
